@@ -65,7 +65,7 @@ def draw_landmarks_on_image(image, detection_result):
         return [x, y, x + w, y + h]
 
     if detection_result.multi_hand_landmarks:
-        for i, hand_landmarks in enumerate(results.multi_hand_landmarks):
+        for i, hand_landmarks in enumerate(detection_result.multi_hand_landmarks):
             mp.solutions.drawing_utils.draw_landmarks(
             image,
             hand_landmarks,
@@ -74,7 +74,7 @@ def draw_landmarks_on_image(image, detection_result):
             mp_drawing_styles.get_default_hand_connections_style())
 
             # Get handedness
-            handedness = results.multi_handedness[i]
+            handedness = detection_result.multi_handedness[i]
 
             # Get the top left corner of the detected hand's bounding box.
             height, width, _ = image.shape
@@ -154,7 +154,7 @@ def plot_hand_3D(detection_result):
 
 
 # Open the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
