@@ -14,6 +14,7 @@ import mediapipe as mp
 import numpy as np
 import time
 from datetime import datetime
+import os
 
 # Import remote control library
 import pyautogui
@@ -29,6 +30,13 @@ from cvfpscalc import CvFpsCalc
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
+
+# For saving image for every interval
+output_dir = "hand_detections"
+os.makedirs(output_dir, exist_ok=True)
+last_save_time = 0
+save_interval = 5
+target_size = 128
 
 # Define opencv constants (BGR format)
 RED      = (0, 0, 255)
@@ -51,6 +59,7 @@ PALM_RED      = (255, 48, 48)
 
 # Custom drawing function
 def draw_landmarks_on_image(image, detection_result):
+    global last_save_time
     def calc_bounding_rect(image, landmarks):
         """
         Helper function to calculate bounding box rectangle of hand
@@ -69,6 +78,7 @@ def draw_landmarks_on_image(image, detection_result):
 
     if detection_result.multi_hand_landmarks:
         for i, hand_landmarks in enumerate(detection_result.multi_hand_landmarks):
+            imagePreLandMark = image.copy()
             mp.solutions.drawing_utils.draw_landmarks(
             image,
             hand_landmarks,
@@ -87,9 +97,22 @@ def draw_landmarks_on_image(image, detection_result):
             text_y = int(min(y_coordinates) * height) - 15
 
             # Draw hand bounding box
-            buffer_px = 10
+            buffer_px = 20
             bbox = calc_bounding_rect(image, hand_landmarks)
-            cv2.rectangle(image, (bbox[0] - buffer_px, bbox[1] - buffer_px), (bbox[2] + buffer_px, bbox[3] + buffer_px), BLACK, 3)
+            x1, y1, x2, y2 = bbox
+            cv2.rectangle(image, (x1 - buffer_px, y1 - buffer_px), (x2 + buffer_px, y2 + buffer_px), BLACK, 3)
+
+            current_time = time.time()
+            if current_time - last_save_time >= save_interval:
+                # Update the last saved time
+                last_save_time = current_time
+
+                # Extract the bounding box region and save it
+                hand_region = imagePreLandMark[y1:y2, x1:x2]
+                resized_image = cv2.resize(hand_region, (target_size, target_size))
+                timestamp = int(current_time * 1000)  # Unique timestamp as filename
+                output_path = os.path.join(output_dir, f"hand_bbox_{timestamp}.png")
+                cv2.imwrite(output_path, resized_image)
 
             # Draw handedness (left or right hand) on the image.
             cv2.putText(image, f"{handedness.classification[0].label}",
