@@ -38,7 +38,7 @@ def perform_action_based_on_color(result):
         print("No action")
 
 # start capturing video
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 if not cap.isOpened():
     print("Error: Could not open webcam.")

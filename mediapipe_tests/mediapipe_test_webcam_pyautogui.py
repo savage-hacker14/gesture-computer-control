@@ -117,7 +117,7 @@ def remote_control_handedness(detection_result):
 
 
 # Open the webcam
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
