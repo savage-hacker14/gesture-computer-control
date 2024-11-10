@@ -190,7 +190,8 @@ def perform_logging(img_pre_landmark, results):
         x_coordinates  = [hand_landmarks.landmark[i].x for i in range(len(hand_landmarks.landmark))]
         y_coordinates  = [hand_landmarks.landmark[i].y for i in range(len(hand_landmarks.landmark))]
         z_coordinates  = [hand_landmarks.landmark[i].z for i in range(len(hand_landmarks.landmark))]
-        full_xyz       = np.array([x_coordinates, y_coordinates, z_coordinates]).reshape(N_LANDMARKS, N_COORDS)
+        full_xyz       = np.array([x_coordinates, y_coordinates, z_coordinates]).T
+        #print(f"idx finger x: {x_coordinates[8]}, y: {y_coordinates[8]}, z: {z_coordinates[8]}")
 
         # Save hand landmark point data
         X_data[seq_id, :, :, frame_id] = full_xyz

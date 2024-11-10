@@ -19,7 +19,7 @@ THUMB_TAN     = (255, 219, 180)
 PALM_RED      = (255, 48, 48)
 
 # Load in desired image data array
-datetime = '20241030_0130'
+datetime = '20241110_1622'
 img_filename = f'img_data_{datetime}'
 x_data_filename = f'X_data_{datetime}'
 seq_id   = 0
@@ -35,7 +35,8 @@ gesture_coord_data = X_data[seq_id]
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, projection='3d')
 #ax.plot(x_coords, y_coords, z_coords, c=colors)
-ax.view_init(elev=0, azim=0, roll=0)
+#ax.view_init(elev=0, azim=0, roll=0)
+ax.view_init(elev=-90, azim=-90, roll=0)
 # src.set_color(colors)
 title = ax.set_title('3D Hand Coordinates')
 ax.set_xlabel('X Label')
