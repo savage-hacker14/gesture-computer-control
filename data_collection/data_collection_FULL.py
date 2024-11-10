@@ -47,6 +47,8 @@ PALM_RED      = (255, 48, 48)
 def calc_bounding_rect(image, landmarks):
     """
     Helper function to calculate bounding box rectangle of hand
+
+    NOTE: Add bounds as well
     """
     image_width, image_height = image.shape[1], image.shape[0]
     landmark_array = np.empty((0, 2), int)
@@ -130,6 +132,7 @@ def draw_logging_status(image, results):
     global frame_id
     global gesture
 
+    # Check if hand was detected
     hand_detected = True if results.multi_hand_landmarks else False
     if (hand_detected):
         curr_hand = results.multi_handedness[0].classification[0].label
@@ -137,8 +140,16 @@ def draw_logging_status(image, results):
         if (not is_collecting):
             prev_hand = curr_hand
 
+    # Check if any hand x or y coordinates are cut off 
+    hand_cut_off = False
+    if (hand_detected):
+        hand_landmarks = results.multi_hand_landmarks[0]        
+        x_coordinates = [hand_landmarks.landmark[i].x for i in range(len(hand_landmarks.landmark))]
+        y_coordinates = [hand_landmarks.landmark[i].y for i in range(len(hand_landmarks.landmark))]
+        hand_cut_off = any([x < 0 for x in x_coordinates]) or any([y < 0 for y in y_coordinates])
+
     # Create is_collecting string
-    if (is_collecting and hand_detected and curr_hand == prev_hand):
+    if (is_collecting and hand_detected and not hand_cut_off and curr_hand == prev_hand):
         is_collecting_str = "YES"
     else:
         is_collecting_str = "NO"
@@ -208,7 +219,7 @@ def perform_logging(img_pre_landmark, results):
 
 
 # Define parameters 
-n_seq = 2
+n_seq = int(input('How many gesture sequences would you like to collect? '))
 gesture = 0                 # TODO: Allow this to be changed during run-time
 gesture_map = {0: "ScrollUp", 1: "ScrollDown", 2: "ZoomIn", 3: "ZoomOut", 4: "AppSwitchLeft", 5: "AppSwitchRight"}
 
