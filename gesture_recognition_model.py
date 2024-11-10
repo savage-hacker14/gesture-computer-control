@@ -21,9 +21,9 @@ def extract_inception_features(img):
 # data_loading_and_preprocessing
 def load_and_preprocess_data():
     # loading data
-    X_data = np.load('X_data.npy')
+    X_data = np.load('X_data_20241030_0130.npy')
     sub_images = np.load('img_data.npy')
-    Y_data = np.load('Y_data.npy')
+    Y_data = np.load('y_data_20241030_0130.npy')
     
     # resizing image for Inception V3
     sub_images_resized = np.array([tf.image.resize(img, (299, 299)) for img in sub_images.reshape(-1, 128, 128, 3)])
