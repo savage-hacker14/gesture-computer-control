@@ -21,19 +21,21 @@ def extract_inception_features(img):
 # data_loading_and_preprocessing
 def load_and_preprocess_data():
     # loading data
-    X_data = np.load('X_data_20241030_0130.npy')
-    sub_images = np.load('img_data.npy')
-    Y_data = np.load('y_data_20241030_0130.npy')
+    X_data = np.load('data_collection\data\X_data_20241030_0130.npy')
+    sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
+    Y_data = np.load('data_collection\data\y_data_20241030_0130.npy')
     
     # resizing image for Inception V3
-    sub_images_resized = np.array([tf.image.resize(img, (299, 299)) for img in sub_images.reshape(-1, 128, 128, 3)])
-    
+    # Make the array writable by copying it
+    sub_images_resized = np.array([tf.image.resize(img, (299, 299)).numpy() for img in sub_images.reshape(-1, 128, 128, 3)])
+    sub_images_resized = sub_images_resized.copy()  # Explicitly make the array writable
+
     # extract Inception V3 features
     inception_features = np.array([extract_inception_features(img) for img in sub_images_resized])
     inception_features = inception_features.reshape(X_data.shape[0], X_data.shape[1], -1)
     
     # merge key points and Inception features
-    combined_features = np.concatenate((X_data, inception_features), axis=-1
+    combined_features = np.concatenate((X_data, inception_features), axis=-1)
     return combined_features, Y_data
 
 #model building module
