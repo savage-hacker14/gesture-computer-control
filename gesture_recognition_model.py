@@ -21,29 +21,30 @@ def extract_inception_features(img):
 # data_loading_and_preprocessing
 def load_and_preprocess_data():
     # loading data
-    X_data = np.load('data_collection\data\X_data_20241030_0130.npy')
-    sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
-    Y_data = np.load('data_collection\data\y_data_20241030_0130.npy')
+    X_data = np.load('data_collection/data/X_data_20241111_1059.npy')
+    # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
+    Y_data = np.load('data_collection/data/y_data_20241111_1059.npy')
+
+    n_seq, N_LANDMARKS, N_COORDS, FRAMES_PER_SEQ = X_data.shape
+    X_data_reshaped = X_data.reshape(n_seq, FRAMES_PER_SEQ, N_LANDMARKS * N_COORDS)
     
     # resizing image for Inception V3
     # Make the array writable by copying it
-    sub_images_resized = np.array([tf.image.resize(img, (299, 299)).numpy() for img in sub_images.reshape(-1, 128, 128, 3)])
-    sub_images_resized = sub_images_resized.copy()  # Explicitly make the array writable
+    # sub_images_resized = np.array([tf.image.resize(img, (299, 299)).numpy() for img in sub_images.reshape(-1, 128, 128, 3)])
+    # sub_images_resized = sub_images_resized.copy()  # Explicitly make the array writable
 
     # extract Inception V3 features
-    inception_features = np.array([extract_inception_features(img) for img in sub_images_resized])
-    inception_features = inception_features.reshape(X_data.shape[0], X_data.shape[1], -1)
+    # inception_features = np.array([extract_inception_features(img) for img in sub_images_resized])
+    # inception_features = inception_features.reshape(X_data.shape[0], X_data.shape[1], -1)
     
     # merge key points and Inception features
-    combined_features = np.concatenate((X_data, inception_features), axis=-1)
-    return combined_features, Y_data
+    # combined_features = np.concatenate((X_data, inception_features), axis=-1)
+    return X_data_reshaped, Y_data
 
 #model building module
 def build_model(input_shape, num_classes):
     inputs = Input(shape=input_shape)
-    x = LSTM(128, return_sequences=True)(inputs)
-    x = LSTM(128)(x)
-    x = Dropout(0.5)(x)
+    x = LSTM(128)(inputs)
     x = Dense(64, activation='relu')(x)
     outputs = Dense(num_classes, activation='softmax')(x)
     
@@ -85,6 +86,11 @@ def evaluate_model(model, features, labels):
     plt.legend(loc="lower right")
     plt.show()
 
+# # Model saving function
+# def save_model(model, filename="gesture_recognition_model.h5"):
+#     model.save(filename)
+#     print(f"Model saved to {filename}")
+
 # main
 if __name__ == "__main__":
     # loading and preprocessing data
@@ -95,6 +101,9 @@ if __name__ == "__main__":
     
     # training and validating the model
     train_and_validate_model(model, combined_features, Y_data)
+
+    # Save model
+    # save_model(model, "gesture_recognition_model.h5")
     
     # evaluating the model
     evaluate_model(model, combined_features, Y_data)
