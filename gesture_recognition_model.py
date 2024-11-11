@@ -25,6 +25,9 @@ def load_and_preprocess_data():
     # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
     Y_data = np.load('data_collection/data/y_data_20241111_1059.npy')
 
+    # Refactor Y_data to only include first 2 columns
+    Y_data = Y_data[:, :2]
+
     n_seq, N_LANDMARKS, N_COORDS, FRAMES_PER_SEQ = X_data.shape
     X_data_reshaped = X_data.reshape(n_seq, FRAMES_PER_SEQ, N_LANDMARKS * N_COORDS)
     
