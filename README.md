@@ -27,12 +27,12 @@ The 6 gestures are mapped to indices as follows:
 
 Below are sample GIFs which visualize these 6 gestures (indices 0 to 5
 as defined above): <br>
-![ScrollUp](data_collection\gifs\img_data_20241111_2356_seq_0.gif)
-![ScrollDwon](data_collection\gifs\img_data_20241111_2352_seq_0.gif)
-![ZoomIn](data_collection\gifs\img_data_20241030_0130_seq_0.gif)
-![ZoomOut](data_collection\gifs\img_data_20241031_1107_seq_1.gif)
-![AppSwitchLeft](data_collection\gifs\img_data_20241111_2352_seq_3.gif)
-![AppSwitchRight](data_collection\gifs\img_data_20241111_2352_seq_4.gif)
+![ScrollUp](data_collection/gifs/scroll_up_sample.gif)
+![ScrollDown](data_collection/gifs/scroll_down_sample.gif)
+![ZoomIn](data_collection/gifs/zoom_in_sample.gif)
+![ZoomOut](data_collection/gifs/zoom_out_sample.gif)
+![AppSwitchLeft](data_collection/gifs/app_switch_left_sample.gif)
+![AppSwitchRight](data_collection/gifs/app_switch_right_sample.gif)
 
 This project is split into two parts: dynamic hand gesture classification and compute control.
 For the dynamic hand gesture classification, we develop both an LSTM and hybrid model (see ML 
