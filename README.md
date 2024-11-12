@@ -133,11 +133,28 @@ collection. If you do not feel comfortable with this facial data collection, you
 the `img_data_{}.npy` file from your upload to OneDrive.
 
 ## 1.4. Repository Organization
-### 1.4.1. `data_collection` folder
-in progress
+### 1.4.1. `data_collection` folder ** In Progress **
 
-### 1.4.2. `mediapipe` test
-in progress
+This folder contains scripts developed for collecting and analyzing hand landmark data using computer vision libraries. The main components include:
+
+- **data_collection_FULL.py**: A comprehensive script that builds upon `data_collection_key_pts.py`. It enables the detection and saving of full-hand subimages, with features to manage timing delays for optimized data collection. The script utilizes OpenCV and MediaPipe for real-time hand landmark detection through a webcam feed.
+
+- **data_collection_key_pts.py**: A foundational script that focuses on capturing key hand landmarks using OpenCV and MediaPipe. It serves as the basis for more advanced data collection functionalities.
+
+These scripts are integral for generating datasets needed for hand gesture recognition and related applications.
+
+### 1.4.2. `mediapipe` test ** in progress **
+
+
+This folder contains scripts for testing and visualizing hand landmark detection using MediaPipe and OpenCV. These scripts provide a framework to analyze and improve hand gesture recognition, with features such as real-time visualization and performance tracking.
+
+- **mediapipe_test_webcam_v4.py**: An advanced testing script that adds FPS display and a 3D scatter plot of hand coordinates for a comprehensive visualization of hand landmarks. The script is optimized for different resolutions, balancing frame rates and processing efficiency.
+
+- **mediapipe_test_webcam.py**: A foundational script for hand landmark detection using a webcam feed, focusing on real-time hand tracking and annotation.
+
+- **mediapipe_test_image.py**: A script for testing hand landmark detection on static images, useful for evaluating detection accuracy and performance on non-dynamic content.
+
+These scripts collectively serve to experiment with and validate hand gesture recognition techniques using different inputs and visualization methods.
 
 ## 1.5. Literature Review / Resources
 in progress
