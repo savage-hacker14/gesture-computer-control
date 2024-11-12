@@ -3,7 +3,7 @@
 Jacob Krucinski - [email](mailto:krucinski.j@northeastern.edu) <br>
 Hau Ha <br>
 Maalolan Bharaniraj <br>
-Yiting Wu <br>
+Yiting Wu - [email](mailto:wu.yitin@northeastern.eduu) <br>
 Andrew Panzone
 
 **NOTE: This README is a work-in-progress**
