@@ -25,7 +25,7 @@ from matplotlib.animation import FuncAnimation
 
 # Import custom libraries
 import sys
-sys.path.append("/Users/alicesu/Documents/AI/gesture-computer-control")
+sys.path.append("..")
 from cvfpscalc import CvFpsCalc
 
 # Helpful mediapipe shortcuts
