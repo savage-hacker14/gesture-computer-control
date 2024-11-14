@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import InceptionV3
 from tensorflow.keras.layers import Dense, LSTM, GlobalAveragePooling2D, Input, Concatenate, Dropout
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
@@ -24,10 +24,10 @@ def extract_inception_features(img):
 def load_and_preprocess_data():
     # loading data
     #X_data = np.load('data_collection/data/x_data_jacob_gesture_2_3_combined.npy')
-    X_data = np.load('data_collection/data_full/X_data_merged.npy')
+    X_data = np.load('data_collection/data_full/X_data_merged_jk_mb_yw.npy')
     # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
     #Y_data = np.load('data_collection/data/y_data_jacob_gesture_2_3_combined.npy')
-    Y_data = np.load('data_collection/data_full/y_data_merged.npy')
+    Y_data = np.load('data_collection/data_full/Y_data_merged_jk_mb_yw.npy')
     #print(f"Y_data: \n{Y_data}")
 
     # Make sure to only use the ZoomIn and ZoomOut columns in the dataset
@@ -51,21 +51,24 @@ def load_and_preprocess_data():
 
 #model building module
 def build_model(input_shape, num_classes):
+    # LSTM 256 and Dense 128 (deeper model) yielded only 78% validation accuracy model
     inputs = Input(shape=input_shape)
-    x = LSTM(128)(inputs)
+    x = LSTM(128, activation='tanh')(inputs)
     x = Dense(64, activation='relu')(x)
+    x = Dropout(0.3)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
     
     model = Model(inputs, outputs)
-    opt = Adam(learning_rate=0.005)
+    #opt = Adam(learning_rate=0.0005, clipnorm=1.0)
+    opt = Adam(learning_rate=0.0005)
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
 # training and validation module
 def train_and_validate_model(model, features, labels):
-    batch_size = 1
-    epochs = 50
-    history = model.fit(features, labels, batch_size=batch_size, epochs=epochs, validation_split=0.2)
+    batch_size = 4
+    epochs = 80
+    history = model.fit(features, labels, batch_size=batch_size, epochs=epochs, validation_split=0.15)
     return history
 
 # assessment module
@@ -80,8 +83,9 @@ def evaluate_model(model, features, labels):
     print(cm)
     
     # classification report
+    class_names = ["ScrollUp", "ScrollDown", "ZoomIn", "ZoomOut", "AppSwitchLeft", "AppSwitchRight"]
     print("Classification Report:")
-    print(classification_report(y_true_classes, y_pred_classes))
+    print(classification_report(y_true_classes, y_pred_classes, target_names=class_names[2:4]))
     
     # ROC  curve
     fpr, tpr, _ = roc_curve(y_true_classes, y_pred[:, 1])
@@ -95,10 +99,10 @@ def evaluate_model(model, features, labels):
     plt.legend(loc="lower right")
     plt.show()
 
-# # Model saving function
-# def save_model(model, filename="gesture_recognition_model.h5"):
-#     model.save(filename)
-#     print(f"Model saved to {filename}")
+# Model saving function
+def save_model(model, filename="gesture_recognition_model.h5"):
+    model.save(filename)
+    print(f"Model saved to {filename}")
 
 # main
 if __name__ == "__main__":
@@ -115,7 +119,7 @@ if __name__ == "__main__":
     # combined_features_test = combined_features[shuffled_idxs:]
     # Y_data_train = Y_data[-test_idxs]
     # Y_data_test = Y_data[test_idxs]
-    print(combined_features_train.shape, combined_features_test.shape)
+    print(f"Input train shape: {combined_features_train.shape}\nInput test shape: {combined_features_test.shape}")
 
     # constructing the model
     model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1])
@@ -124,7 +128,7 @@ if __name__ == "__main__":
     train_and_validate_model(model, combined_features_train, Y_data_train)
 
     # Save model
-    # save_model(model, "gesture_recognition_model.h5")
+    save_model(model, "nn_weights/lstm_2class_20241114_test.h5")
     
     # evaluating the model
     evaluate_model(model, combined_features_test, Y_data_test)
