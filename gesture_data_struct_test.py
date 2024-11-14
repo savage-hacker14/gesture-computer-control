@@ -22,12 +22,13 @@ y_data = np.load('data_collection/data_full/Y_data_merged_jk_mb_yw.npy')
 idx = np.where(y_data[:, 3] == 1)[0][0]
 gesture = x_data[idx, :, :, :]
 y_label = y_data[idx, :]
-print(f"Gesture shape: {gesture.shape}")
 print(f"Y true: {y_label}")
+#print(f"Gesture shape: {gesture.shape}")
 # print(f"Gesture xyz: {gesture[0, :, :]}, {gesture[0, :, :].shape}")
 # gesture = gesture.reshape(10, 21, 3)
 gesture = gesture.reshape(10, 21 * 3)            # NOTE: Reshaping makes the 63-long row in the form x,x,x,...,y,y,y,...,z,z,z,... NOT x,y,z,x,y,z,x,y,z....
 #print(f"New gesture xyz: {gesture[:, 0:6]}")
+print(f"Gesture shape: {gesture.shape}")
 
 # Run the model with 
 buffer = np.zeros((1, 10, 63))
