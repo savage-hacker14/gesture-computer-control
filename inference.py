@@ -69,7 +69,7 @@ def update_gesture_buffer(gesture_seq, landmarks):
     gesture_seq[0, -1, :] = hand_data  # Add new frame to the buffer
     return gesture_seq
 
-# Function to predict gesture based on the current buffer
+# Function to predict gesture based on the current buffers
 def predict_gesture(gesture_seq):
     """
     Predicts the gesture using the LSTM model.
