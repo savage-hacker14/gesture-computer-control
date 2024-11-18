@@ -51,6 +51,12 @@ INDEX_PURPLE  = (128, 64, 128)
 THUMB_TAN     = (255, 219, 180)
 PALM_RED      = (255, 48, 48)
 
+# Define model parameters
+GESTURE_TIME   = 3                                  # [s], time to collect all frames
+FRAMES_PER_SEQ = 10
+FRAME_DELAY    = GESTURE_TIME / FRAMES_PER_SEQ      # [s]
+last_save_time = 0
+
 # Load LSTM model for gesture classification
 lstm_model = load_model('nn_weights/lstm_2class_20241114_better.h5')
 
@@ -76,6 +82,7 @@ def predict_gesture(gesture_seq):
     Returns a string: "Zoom In" or "Zoom Out" based on the predicted class.
     """
     output_prob = lstm_model.predict(gesture_seq, verbose=0)
+    print(f"Output probabilities: {output_prob}")
     return "Zoom In" if output_prob[0, 0] < output_prob[0, 1] else "Zoom Out"
 
 # Custom drawing function
@@ -133,7 +140,7 @@ def draw_results(image, detection_result, gesture_label):
     return image
 
 # Open the webcam
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
@@ -162,9 +169,16 @@ with mp_hands.Hands(
         results = hands.process(image)
 
         # If hands are detected, process landmarks
-        if results.multi_hand_landmarks:
+        current_time = time.time()
+        if results.multi_hand_landmarks and (current_time - last_save_time >= FRAME_DELAY):
+            #print("grabbed coordinates")
+            last_save_time = current_time
             gesture_seq = update_gesture_buffer(gesture_seq, results.multi_hand_landmarks[0])
             gesture_label = predict_gesture(gesture_seq)
+        elif (not results.multi_hand_landmarks):
+            #print("no hands detected")
+            gesture_seq = np.zeros((1, 10, 63))     # Clear the gesture sequence buffer
+
 
         # Draw the hand annotations on the image.
         image.flags.writeable = True
