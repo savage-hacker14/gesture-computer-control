@@ -28,11 +28,15 @@ MIDDLE_YELLOW = (255, 204, 0)
 INDEX_PURPLE  = (128, 64, 128)
 THUMB_TAN     = (255, 219, 180)
 PALM_RED      = (255, 48, 48)
+BLACK         = (0, 0, 0)
 
 # Load in desired image data array
-x_data_filename = 'X_data_merged_jk_mb_yw'
-seq_id   = 155
-X_data   = np.load(f"data_full/{x_data_filename}.npy")
+x_data_filename = 'X_data_20241119_1341'
+seq_id   = 1
+X_data   = np.load(f"data/{x_data_filename}.npy")
+
+# Transpose data if necessary
+#X_data = np.transpose(X_data, (0, 2, 3, 1))         # ONLY do this for buffer type
 print(f"X data size: {X_data.shape}")
 
 # Load the data from the data files into the correct format for plotting
@@ -41,13 +45,16 @@ gesture_coord_data = X_data[seq_id]
 # Create background white frames
 IMG_H = 720
 IMG_W = 1280
-FRAMES_PER_SEQ = X_data.shape[3]
+FRAMES_PER_SEQ = 10
 frames = np.ones((FRAMES_PER_SEQ, IMG_H, IMG_W, 3)) * 255
 
 # Define helper function for drawing hand
-def draw_hand_in_frame(frame, coord_data):
-    # First draw all points
-    radius = 3
+def draw_hand_in_frame(frame, frame_num, coord_data):
+    # First draw Frame number in bottom of image
+    cv2.putText(frame, f"Frame {frame_num:02d}", (15, IMG_H - 15), cv2.FONT_HERSHEY_SIMPLEX, 1.0, BLACK, 2, cv2.LINE_AA)
+
+    # Then draw all points
+    radius = 5
     thickness = -1                          # To fill the circle
     for i in range(coord_data.shape[0]):
         unnorm_coord = (int(coord_data[i, 0] * IMG_W), int(coord_data[i, 1] * IMG_H))
@@ -81,19 +88,19 @@ def draw_hand_in_frame(frame, coord_data):
         s_y = int(coord_data[s_pt, 1] * IMG_H)
         e_x = int(coord_data[e_pt, 0] * IMG_W)
         e_y = int(coord_data[e_pt, 1] * IMG_H)
-        cv2.line(frame, (s_x, s_y), (e_x, e_y), (0, 0, 0), 1)
-
+        cv2.line(frame, (s_x, s_y), (e_x, e_y), BLACK, 1)
 
     return frame
 
 # Plot hand coordinates on each frame
 for i in range(FRAMES_PER_SEQ):
     coord_data = gesture_coord_data[:, :, i]
-    frames[i, :, :, :] = draw_hand_in_frame(frames[i, :, :, :], coord_data)
+    frames[i, :, :, :] = draw_hand_in_frame(frames[i, :, :, :], i, coord_data)
 
 # Convert frames to image object
 print(f"Image shape: {frames[0, :, :, :].shape}")
 frames_img = [Image.fromarray(frames[i, :, :, :].astype('uint8')) for i in range(FRAMES_PER_SEQ)]
+print(f"Frame length: {len(frames_img)}")
 
 # Now save to GIF
 os.makedirs("gifs_pts/", exist_ok=True)
