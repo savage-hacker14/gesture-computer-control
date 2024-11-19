@@ -56,6 +56,7 @@ GESTURE_TIME   = 3                                  # [s], time to collect all f
 FRAMES_PER_SEQ = 10
 FRAME_DELAY    = GESTURE_TIME / FRAMES_PER_SEQ      # [s]
 last_save_time = 0
+buffer_idx     = 0
 
 # Load LSTM model for gesture classification
 lstm_model = load_model('nn_weights/lstm_2class_20241114_better.h5')
@@ -70,9 +71,25 @@ def update_gesture_buffer(gesture_seq, landmarks):
     Update the gesture buffer with the latest hand landmarks.
     The buffer shape is (1, 10, 63), where 63 = 21 landmarks * 3 coordinates.
     """
-    hand_data = np.array([[lm.x, lm.y, lm.z] for lm in landmarks.landmark]).flatten()
-    gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)  # Shift buffer
-    gesture_seq[0, -1, :] = hand_data  # Add new frame to the buffer
+    global buffer_idx
+
+    hand_data = np.array([[lm.x, lm.y, lm.z] for lm in landmarks.landmark]).T.flatten()         # Ensures the data 
+    #gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)  # Shift buffer
+    if (buffer_idx != FRAMES_PER_SEQ - 1):
+        gesture_seq[0, buffer_idx:, :] = hand_data  # Add new frame to the buffer
+        buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ
+    else:
+        # Fill the buffer with the current hand data
+        buffer_idx = 0
+        gesture_seq[0, buffer_idx:, :] = hand_data  # Add new frame to the buffer
+        buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ
+
+        # OR
+
+        # # Shift the buffer 1 index to the left and add current hand points to the last position in buffer
+        # gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)    # Shift buffer
+        # gesture_seq[0, -1, :] = hand_data                       # Add new frame to the end of the buffer
+
     return gesture_seq
 
 # Function to predict gesture based on the current buffers
@@ -83,7 +100,7 @@ def predict_gesture(gesture_seq):
     """
     output_prob = lstm_model.predict(gesture_seq, verbose=0)
     print(f"Output probabilities: {output_prob}")
-    return "Zoom In" if output_prob[0, 0] < output_prob[0, 1] else "Zoom Out"
+    return "Zoom In" if output_prob[0, 0] > output_prob[0, 1] else "Zoom Out"
 
 # Custom drawing function
 def draw_results(image, detection_result, gesture_label):
@@ -140,7 +157,7 @@ def draw_results(image, detection_result, gesture_label):
     return image
 
 # Open the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
@@ -178,6 +195,8 @@ with mp_hands.Hands(
         elif (not results.multi_hand_landmarks):
             #print("no hands detected")
             gesture_seq = np.zeros((1, 10, 63))     # Clear the gesture sequence buffer
+            gesture_label = "N/A"                   # Remove the gesture label
+            buffer_idx = 0                          # Reset buffer_idx
 
 
         # Draw the hand annotations on the image.
