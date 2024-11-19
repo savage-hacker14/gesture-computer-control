@@ -57,13 +57,28 @@ FRAMES_PER_SEQ = 10
 FRAME_DELAY    = GESTURE_TIME / FRAMES_PER_SEQ      # [s]
 last_save_time = 0
 buffer_idx     = 0
+still_thres    = 0.12                               # Normalized distances - May need to adjust depending on FRAME_DELAY
 
 # Load LSTM model for gesture classification
 lstm_model = load_model('nn_weights/lstm_2class_20241114_better.h5')
 
 # Define an array to store the hand key point sequence (gesture buffer)
 gesture_seq = np.zeros((1, 10, 63))  # Buffer for 10 frames of hand landmarks
+idx_seq = np.zeros((1, 10))
 gesture_label = ""  # Variable to store current gesture label
+
+# Function to detect if hand is still
+def is_still(gesture_seq):
+    # Calculate difference between previous point (for now) - This needs to be scaled with distance (z coord)
+    # TODO: Maybe use Euclidean (2-norm) distance instead
+    global buffer_idx
+
+    gesture_seq_xyz = np.transpose(gesture_seq.reshape(1, FRAMES_PER_SEQ, 3, 21), (0, 1, 3, 2))                 # Shape: [1, 10, 21, 3]
+    # print(f"Gesture orig xyz: {gesture_seq[0, 0, [0, 21, 42]]}, new xyz: {gesture_seq_xyz[0, 0, 0, :]}")
+    #total_diff = np.mean(np.divide(abs(gesture_seq[0, buffer_idx, 0] - gesture_seq[0, buffer_idx - 1, 1]), gesture_seq[0, buffer_idx - 1, 2]))
+    total_diff = np.sum(np.sqrt(np.sum((gesture_seq_xyz[0, buffer_idx - 1, :, 0:2] - gesture_seq_xyz[0, buffer_idx - 2, :, 0:2])**2, axis=1)))
+    #print(f"Pixel diff: {total_diff}")
+    return total_diff < still_thres
 
 # Function to process landmarks into the required buffer format
 def update_gesture_buffer(gesture_seq, landmarks):
@@ -74,14 +89,18 @@ def update_gesture_buffer(gesture_seq, landmarks):
     global buffer_idx
 
     hand_data = np.array([[lm.x, lm.y, lm.z] for lm in landmarks.landmark]).T.flatten()         # Ensures the data 
-    #gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)  # Shift buffer
+    # gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)  # Shift buffer
+    # gesture_seq[0, -1, :] = hand_data                       # Add new frame to the end of the buffer
     if (buffer_idx != FRAMES_PER_SEQ - 1):
-        gesture_seq[0, buffer_idx:, :] = hand_data  # Add new frame to the buffer
+        gesture_seq[0, buffer_idx, :] = hand_data  # Add new frame to the buffer (NO forward filling)
+        # idx_seq[0, buffer_idx:] = buffer_idx
+        # print(f"Buffer index: {idx_seq}")
         buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ
     else:
         # Fill the buffer with the current hand data
-        buffer_idx = 0
         gesture_seq[0, buffer_idx:, :] = hand_data  # Add new frame to the buffer
+        # idx_seq[0, buffer_idx:] = buffer_idx
+        # print(f"Buffer index: {idx_seq}")
         buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ
 
         # OR
@@ -98,8 +117,20 @@ def predict_gesture(gesture_seq):
     Predicts the gesture using the LSTM model.
     Returns a string: "Zoom In" or "Zoom Out" based on the predicted class.
     """
+    # global gesture_label
+
+    # # Try only performing prediction on full sequence - Did not seem to work
+    # if (buffer_idx == 9):
+    #     print("Full seq")
+    #     output_prob = lstm_model.predict(gesture_seq, verbose=0)
+    # else:
+    #     if (buffer_idx == 0):
+    #         print("New seq")
+    #     output_prob = np.array([[0.0, 0.0]])
+    #     return "N/A"
+
     output_prob = lstm_model.predict(gesture_seq, verbose=0)
-    print(f"Output probabilities: {output_prob}")
+    #print(f"Output probabilities: {output_prob}")
     return "Zoom In" if output_prob[0, 0] > output_prob[0, 1] else "Zoom Out"
 
 # Custom drawing function
@@ -163,8 +194,8 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
 with mp_hands.Hands(
     model_complexity=0,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5) as hands:
+    min_detection_confidence=0.7,
+    min_tracking_confidence=0.7) as hands:
 
     # Define FPS counter object
     cvFpsCalc = CvFpsCalc(buffer_len=10)
@@ -191,7 +222,12 @@ with mp_hands.Hands(
             #print("grabbed coordinates")
             last_save_time = current_time
             gesture_seq = update_gesture_buffer(gesture_seq, results.multi_hand_landmarks[0])
-            gesture_label = predict_gesture(gesture_seq)
+            
+            # Check if hand is still or not
+            if (is_still(gesture_seq)):
+                gesture_label = "Still"
+            else:
+                gesture_label = predict_gesture(gesture_seq)
         elif (not results.multi_hand_landmarks):
             #print("no hands detected")
             gesture_seq = np.zeros((1, 10, 63))     # Clear the gesture sequence buffer
