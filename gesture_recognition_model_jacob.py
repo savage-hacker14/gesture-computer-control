@@ -1,8 +1,9 @@
 # gesture_recognition_model.py
 import tensorflow as tf
 from tensorflow.keras.applications import InceptionV3
-from tensorflow.keras.layers import Dense, LSTM, GlobalAveragePooling2D, Input, Concatenate, Dropout
-from tensorflow.keras.models import Model
+from tensorflow.keras import Input
+from tensorflow.keras.layers import Dense, Reshape, LSTM, GlobalAveragePooling2D, Input, Concatenate, Dropout
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
@@ -33,8 +34,9 @@ def load_and_preprocess_data():
     # Make sure to only use the ZoomIn and ZoomOut columns in the dataset
     Y_data = Y_data[:, 2:4]
 
-    n_seq, N_LANDMARKS, N_COORDS, FRAMES_PER_SEQ = X_data.shape
-    X_data_reshaped = X_data.reshape(n_seq, FRAMES_PER_SEQ, N_LANDMARKS * N_COORDS)
+    #n_seq, N_LANDMARKS, N_COORDS, FRAMES_PER_SEQ = X_data.shape
+    #X_data_reshaped = X_data.reshape(n_seq, FRAMES_PER_SEQ, N_LANDMARKS * N_COORDS)
+    X_data_reshaped = np.transpose(X_data, (0, 3, 1, 2))
     
     # resizing image for Inception V3
     # Make the array writable by copying it
@@ -50,18 +52,27 @@ def load_and_preprocess_data():
     return X_data_reshaped, Y_data
 
 #model building module
-def build_model(input_shape, num_classes):
+def build_model(input_shape, num_classes, load_model_pth=None):
     # LSTM 256 and Dense 128 (deeper model) yielded only 78% validation accuracy model
-    inputs = Input(shape=input_shape)
-    x = LSTM(128, activation='tanh')(inputs)
-    x = Dense(64, activation='relu')(x)
-    x = Dropout(0.3)(x)
-    outputs = Dense(num_classes, activation='softmax')(x)
-    
-    model = Model(inputs, outputs)
-    #opt = Adam(learning_rate=0.0005, clipnorm=1.0)
-    opt = Adam(learning_rate=0.0005)
-    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    if (not load_model_pth):
+        inputs = Input(shape=input_shape)
+        x = Reshape((10, 63))(inputs)
+        x = LSTM(128, activation='tanh')(x)
+        x = Dense(64, activation='sigmoid')(x)
+        x = Dropout(0.4)(x)
+        x = Dense(32, activation='relu')(x)
+        outputs = Dense(num_classes, activation='softmax')(x)
+        
+        model = Model(inputs, outputs)
+        #opt = Adam(learning_rate=0.0005, clipnorm=1.0)
+        opt = Adam(learning_rate=0.001)
+        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    else:
+        # Load model from 
+        print("Loading pre-trained model...")
+        model = load_model(load_model_pth)
+
+    print(model.summary())
     return model
 
 # training and validation module
@@ -120,15 +131,17 @@ if __name__ == "__main__":
     # Y_data_train = Y_data[-test_idxs]
     # Y_data_test = Y_data[test_idxs]
     print(f"Input train shape: {combined_features_train.shape}\nInput test shape: {combined_features_test.shape}")
+    print(f"Train Frequences: ZoomIn: {np.sum(Y_data_train[:, 0])}, ZoomOut: {np.sum(Y_data_train[:, 1])}")
 
     # constructing the model
     model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1])
+    #model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1], load_model_pth="nn_weights/lstm_2class_20241115_test.h5")
     
     # training and validating the model
     train_and_validate_model(model, combined_features_train, Y_data_train)
 
     # Save model
-    save_model(model, "nn_weights/lstm_2class_20241114_test.h5")
+    save_model(model, "nn_weights/lstm_2class_20241119_test.h5")
     
     # evaluating the model
     evaluate_model(model, combined_features_test, Y_data_test)
