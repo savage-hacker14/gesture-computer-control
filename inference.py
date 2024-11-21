@@ -65,7 +65,7 @@ LOGGING        = True                               # If logging is enabled, sto
 
 # Load LSTM model for gesture classification
 #lstm_model = load_model('nn_weights/lstm_2class_20241114_better.h5')
-lstm_model = load_model('nn_weights/lstm_2class_20241119_test.h5')
+lstm_model = load_model('nn_weights/lstm_2class_20241121_test.h5')
 
 # Define an array to store the hand key point sequence (gesture buffer)
 buffer_seq    = np.zeros((1, 10, 21, 3))        # Continuously grabbing hand landmark points
@@ -159,8 +159,9 @@ def predict_gesture(gesture_seq):
     #         print("New seq")
     #     return "N/A"
 
-    print(f"Output probabilities: {output_prob}")
-    return "Zoom In" if output_prob[0, 0] > output_prob[0, 1] else "Zoom Out"
+    output_label = "Zoom In" if output_prob[0, 0] > output_prob[0, 1] else "Zoom Out"
+    print(f"Output probabilities: {output_prob} ({output_label})")
+    return output_label
 
 # Custom drawing function
 def draw_results(image, detection_result, gesture_label):
