@@ -30,10 +30,11 @@ THUMB_TAN     = (255, 219, 180)
 PALM_RED      = (255, 48, 48)
 BLACK         = (0, 0, 0)
 
+
 # Load in desired image data array
-x_data_filename = 'X_data_20241119_1341'
-seq_id   = 1
-X_data   = np.load(f"data/{x_data_filename}.npy")
+x_data_filename = 'X_data_merged_v2'
+seq_id   = 104
+X_data   = np.load(f"data_full/{x_data_filename}.npy")
 
 # Transpose data if necessary
 #X_data = np.transpose(X_data, (0, 2, 3, 1))         # ONLY do this for buffer type
@@ -88,7 +89,15 @@ def draw_hand_in_frame(frame, frame_num, coord_data):
         s_y = int(coord_data[s_pt, 1] * IMG_H)
         e_x = int(coord_data[e_pt, 0] * IMG_W)
         e_y = int(coord_data[e_pt, 1] * IMG_H)
-        cv2.line(frame, (s_x, s_y), (e_x, e_y), BLACK, 1)
+
+        # Pick color of line depending on whether end point z > start point z and vice verse
+        # TODO: Make this based on palm points
+        if (coord_data[e_pt, 2] > coord_data[s_pt, 2]):
+            # Line moving forwards in z
+            cv2.line(frame, (s_x, s_y), (e_x, e_y), PALM_RED, 1)
+        else: 
+            # Line moving backwards in z
+            cv2.line(frame, (s_x, s_y), (e_x, e_y), BLACK, 1)
 
     return frame
 

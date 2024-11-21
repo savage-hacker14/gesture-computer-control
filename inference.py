@@ -57,53 +57,68 @@ FRAMES_PER_SEQ = 10
 FRAME_DELAY    = GESTURE_TIME / FRAMES_PER_SEQ      # [s]
 last_save_time = 0
 buffer_idx     = 0
-still_thres    = 0.12                               # Normalized distances - May need to adjust depending on FRAME_DELAY
+gesture_idx    = 0
+still_thres    = 0.15                               # Normalized distances - May need to adjust depending on FRAME_DELAY
 buffer_counter = 1
+reached_first_still = False
+LOGGING        = True                               # If logging is enabled, store each gesture to enumerated buffer .npy file in data_collection/data folder
 
 # Load LSTM model for gesture classification
 #lstm_model = load_model('nn_weights/lstm_2class_20241114_better.h5')
 lstm_model = load_model('nn_weights/lstm_2class_20241119_test.h5')
 
 # Define an array to store the hand key point sequence (gesture buffer)
-gesture_seq = np.zeros((1, 10, 21, 3))  # Buffer for 10 frames of hand landmarks
-idx_seq = np.zeros((1, 10))
+buffer_seq    = np.zeros((1, 10, 21, 3))        # Continuously grabbing hand landmark points
+gesture_seq   = np.zeros((1, 10, 21, 3))        # Gesture sequence that is fed to LSTM model (only begins to get filled once the first still hand frame has been reached)
+idx_seq       = np.zeros((1, 10))
 gesture_label = ""  # Variable to store current gesture label
 
 # Function to detect if hand is still
-def is_still(gesture_seq):
+def is_still():
     # Calculate difference between previous point (for now) - This needs to be scaled with distance (z coord)
     # TODO: Maybe use Euclidean (2-norm) distance instead
     global buffer_idx
+    global buffer_seq
 
     #gesture_seq_xyz = np.transpose(gesture_seq.reshape(1, FRAMES_PER_SEQ, 3, 21), (0, 1, 3, 2))                 # Shape: [1, 10, 21, 3]
     # print(f"Gesture orig xyz: {gesture_seq[0, 0, [0, 21, 42]]}, new xyz: {gesture_seq_xyz[0, 0, 0, :]}")
     #total_diff = np.mean(np.divide(abs(gesture_seq[0, buffer_idx, 0] - gesture_seq[0, buffer_idx - 1, 1]), gesture_seq[0, buffer_idx - 1, 2]))
-    total_diff = np.sum(np.sqrt(np.sum((gesture_seq[0, buffer_idx - 1, :, 0:2] - gesture_seq[0, buffer_idx - 2, :, 0:2])**2, axis=1)))
+    total_diff = np.sum(np.sqrt(np.sum((buffer_seq[0, buffer_idx - 1, :, 0:2] - buffer_seq[0, buffer_idx - 2, :, 0:2])**2, axis=1)))
     #print(f"Pixel diff: {total_diff}")
     return total_diff < still_thres
 
 # Function to process landmarks into the required buffer format
-def update_gesture_buffer(gesture_seq, landmarks):
+def update_buffers(gesture_seq, landmarks):
     """
     Update the gesture buffer with the latest hand landmarks.
     The buffer shape is (1, 10, 21, 3)
     """
     global buffer_idx
+    global gesture_idx
+    global gesture_label
+    global reached_first_still
 
     hand_data = np.array([[lm.x, lm.y, lm.z] for lm in landmarks.landmark])
+    # Tried creating hand_data array similar to data_collection_FULL, but no difference
     # gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)  # Shift buffer
     # gesture_seq[0, -1, :] = hand_data                       # Add new frame to the end of the buffer
-    if (buffer_idx != FRAMES_PER_SEQ - 1):
-        gesture_seq[0, buffer_idx, :, :] = hand_data  # Add new frame to the buffer (NO forward filling)
-        # idx_seq[0, buffer_idx:] = buffer_idx
-        # print(f"Buffer index: {idx_seq}")
-        buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ
-    else:
-        # Fill the buffer with the current hand data
-        gesture_seq[0, buffer_idx:, :, :] = hand_data  # Add new frame to the buffer
-        # idx_seq[0, buffer_idx:] = buffer_idx
-        # print(f"Buffer index: {idx_seq}")
-        buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ
+
+    # Log all hand coordinate data at the specified intervals for still hand 
+    print(f"Recording buffer index {buffer_idx}")
+    buffer_seq[0, buffer_idx, :, :] = hand_data
+    buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ       
+
+    if (gesture_idx != FRAMES_PER_SEQ - 1 and reached_first_still):
+        # Make sure to only fill frames in the buffer AFTER first still has been reached
+        print(f"Reached first still, gesture_idx {gesture_idx}")
+        gesture_seq[0, gesture_idx, :, :] = hand_data  # Add new frame to the buffer (NO forward filling)
+        gesture_idx = (gesture_idx + 1) % FRAMES_PER_SEQ
+    elif (gesture_idx == FRAMES_PER_SEQ - 1 and reached_first_still):
+        # Fill the buffer with the current hand 
+        print("Gesture sequence full")
+        gesture_seq[0, gesture_idx:, :, :] = hand_data  # Add new frame to the buffer
+        gesture_label = predict_gesture(gesture_seq)
+        gesture_idx = (gesture_idx + 1) % FRAMES_PER_SEQ
 
         # OR
 
@@ -118,23 +133,32 @@ def predict_gesture(gesture_seq):
     """
     Predicts the gesture using the LSTM model.
     Returns a string: "Zoom In" or "Zoom Out" based on the predicted class.
+
+    NOTE: This function assumes gesture_seq is full
     """
     # global gesture_label
     global buffer_counter
 
-    # Try only performing prediction on full sequence - Did not seem to work
-    if (buffer_idx == 9):
-        print("Full seq")
-        np.save(f"data_collection/data/buffer_{buffer_counter:03d}.npy", gesture_seq)
+    if (LOGGING):
+        np.save(f"data_collection/data/gesture_{buffer_counter:03d}.npy", gesture_seq)
         buffer_counter += 1
-        output_prob = lstm_model.predict(gesture_seq, verbose=0)
-    else:
-        if (buffer_idx == 0):
-            print("New seq")
-        output_prob = np.array([[0.0, 0.0]])
-        return "N/A"
+        
+    output_prob = lstm_model.predict(gesture_seq, verbose=0)
 
-    #output_prob = lstm_model.predict(gesture_seq, verbose=0)
+    # Try only performing prediction on full sequence - Did not seem to work
+    # if (gesture_idx == 9):
+    #     print("Full seq")
+
+    #     if (LOGGING):
+    #         np.save(f"data_collection/data/gesture_{buffer_counter:03d}.npy", gesture_seq)
+    #         buffer_counter += 1
+            
+    #     output_prob = lstm_model.predict(gesture_seq, verbose=0)
+    # else:
+    #     if (gesture_idx == 0):
+    #         print("New seq")
+    #     return "N/A"
+
     print(f"Output probabilities: {output_prob}")
     return "Zoom In" if output_prob[0, 0] > output_prob[0, 1] else "Zoom Out"
 
@@ -221,24 +245,30 @@ with mp_hands.Hands(
         image = cv2.flip(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), 1)
         results = hands.process(image)
 
+        # I have an idea
+        # Perhaps the motion of the hand entering the frame is confusing the LSTM
+        # Using the "still" flag, wait until first "still" state has been reached then start collecting
+
         # If hands are detected, process landmarks
         current_time = time.time()
         if results.multi_hand_landmarks and (current_time - last_save_time >= FRAME_DELAY):
             #print("grabbed coordinates")
             last_save_time = current_time
-            gesture_seq = update_gesture_buffer(gesture_seq, results.multi_hand_landmarks[0])
+            gesture_seq = update_buffers(gesture_seq, results.multi_hand_landmarks[0])
             
             # Check if hand is still or not
-            gesture_label = predict_gesture(gesture_seq)
-            # if (is_still(gesture_seq)):
-            #     gesture_label = "Still"
-            # else:
-            #     
+            #gesture_label = predict_gesture(gesture_seq)
+            if (is_still()):
+                gesture_label = "Still"
+                if (not reached_first_still):
+                    #print("Reached first still hand")
+                    reached_first_still = True
         elif (not results.multi_hand_landmarks):
             #print("no hands detected")
             gesture_seq = np.zeros((1, 10, 21, 3))      # Clear the gesture sequence buffer
             gesture_label = "N/A"                       # Remove the gesture label
-            buffer_idx = 0                              # Reset buffer_idx
+            reached_first_still = False                 # Reset reached last first still flag
+            gesture_idx = 0                             # Reset gesture_idx
 
 
         # Draw the hand annotations on the image.
