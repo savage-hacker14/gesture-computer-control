@@ -25,14 +25,14 @@ def extract_inception_features(img):
 def load_and_preprocess_data():
     # loading data
     #X_data = np.load('data_collection/data/x_data_jacob_gesture_2_3_combined.npy')
-    X_data = np.load('data_collection/data_full/X_data_merged_v2.npy')
+    X_data = np.load('data_collection/data_full/X_data_merged.npy')
     # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
     #Y_data = np.load('data_collection/data/y_data_jacob_gesture_2_3_combined.npy')
-    Y_data = np.load('data_collection/data_full/Y_data_merged_v2.npy')
+    Y_data = np.load('data_collection/data_full/Y_data_merged.npy')
     #print(f"Y_data: \n{Y_data}")
 
     # Make sure to only use the ZoomIn and ZoomOut columns in the dataset
-    Y_data = Y_data[:, 2:4]
+    #Y_data = Y_data[:, 2:4]
 
     #n_seq, N_LANDMARKS, N_COORDS, FRAMES_PER_SEQ = X_data.shape
     #X_data_reshaped = X_data.reshape(n_seq, FRAMES_PER_SEQ, N_LANDMARKS * N_COORDS)
@@ -58,9 +58,9 @@ def build_model(input_shape, num_classes, load_model_pth=None):
         inputs = Input(shape=input_shape)
         x = Reshape((10, 63))(inputs)
         x = LSTM(64, activation='tanh')(x)
-        x = Dense(64, activation='sigmoid')(x)
-        #x = Dropout(0.2)(x)
-        x = Dense(32, activation='relu')(x)
+        x = Dense(128, activation='sigmoid')(x)
+        x = Dropout(0.2)(x)
+        x = Dense(64, activation='relu')(x)
         outputs = Dense(num_classes, activation='softmax')(x)
         
         model = Model(inputs, outputs)
@@ -78,7 +78,7 @@ def build_model(input_shape, num_classes, load_model_pth=None):
 # training and validation module
 def train_and_validate_model(model, features, labels):
     batch_size = 4
-    epochs = 50
+    epochs = 75
     history = model.fit(features, labels, batch_size=batch_size, epochs=epochs, validation_split=0.15)
     return history
 
@@ -96,19 +96,19 @@ def evaluate_model(model, features, labels):
     # classification report
     class_names = ["ScrollUp", "ScrollDown", "ZoomIn", "ZoomOut", "AppSwitchLeft", "AppSwitchRight"]
     print("Classification Report:")
-    print(classification_report(y_true_classes, y_pred_classes, target_names=class_names[2:4]))
+    print(classification_report(y_true_classes, y_pred_classes, target_names=class_names))
     
     # ROC  curve
-    fpr, tpr, _ = roc_curve(y_true_classes, y_pred[:, 1])
-    roc_auc = auc(fpr, tpr)
-    plt.figure()
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic')
-    plt.legend(loc="lower right")
-    plt.show()
+    # fpr, tpr, _ = roc_curve(y_true_classes, y_pred[:, 1])
+    # roc_auc = auc(fpr, tpr)
+    # plt.figure()
+    # plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
+    # plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    # plt.xlabel('False Positive Rate')
+    # plt.ylabel('True Positive Rate')
+    # plt.title('Receiver Operating Characteristic')
+    # plt.legend(loc="lower right")
+    # plt.show()
 
 # Model saving function
 def save_model(model, filename="gesture_recognition_model.h5"):
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     train_and_validate_model(model, combined_features_train, Y_data_train)
 
     # Save model
-    save_model(model, "nn_weights/lstm_2class_20241121_test.h5")
+    save_model(model, "nn_weights/lstm_2class_20241127_test.h5")
     
     # evaluating the model
     evaluate_model(model, combined_features_test, Y_data_test)
