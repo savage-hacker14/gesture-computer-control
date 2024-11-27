@@ -25,10 +25,10 @@ def extract_inception_features(img):
 def load_and_preprocess_data():
     # loading data
     #X_data = np.load('data_collection/data/x_data_jacob_gesture_2_3_combined.npy')
-    X_data = np.load('data_collection/data_full/X_data_merged_jk_mb_yw.npy')
+    X_data = np.load('data_collection/data_full/X_data_merged_v2.npy')
     # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
     #Y_data = np.load('data_collection/data/y_data_jacob_gesture_2_3_combined.npy')
-    Y_data = np.load('data_collection/data_full/Y_data_merged_jk_mb_yw.npy')
+    Y_data = np.load('data_collection/data_full/Y_data_merged_v2.npy')
     #print(f"Y_data: \n{Y_data}")
 
     # Make sure to only use the ZoomIn and ZoomOut columns in the dataset
@@ -57,9 +57,9 @@ def build_model(input_shape, num_classes, load_model_pth=None):
     if (not load_model_pth):
         inputs = Input(shape=input_shape)
         x = Reshape((10, 63))(inputs)
-        x = LSTM(128, activation='tanh')(x)
+        x = LSTM(64, activation='tanh')(x)
         x = Dense(64, activation='sigmoid')(x)
-        x = Dropout(0.4)(x)
+        #x = Dropout(0.2)(x)
         x = Dense(32, activation='relu')(x)
         outputs = Dense(num_classes, activation='softmax')(x)
         
@@ -78,7 +78,7 @@ def build_model(input_shape, num_classes, load_model_pth=None):
 # training and validation module
 def train_and_validate_model(model, features, labels):
     batch_size = 4
-    epochs = 80
+    epochs = 50
     history = model.fit(features, labels, batch_size=batch_size, epochs=epochs, validation_split=0.15)
     return history
 
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     train_and_validate_model(model, combined_features_train, Y_data_train)
 
     # Save model
-    save_model(model, "nn_weights/lstm_2class_20241119_test.h5")
+    save_model(model, "nn_weights/lstm_2class_20241121_test.h5")
     
     # evaluating the model
     evaluate_model(model, combined_features_test, Y_data_test)
