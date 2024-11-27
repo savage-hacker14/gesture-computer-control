@@ -32,9 +32,12 @@ BLACK         = (0, 0, 0)
 
 
 # Load in desired image data array
-x_data_filename = 'X_data_20241121_1959'
-seq_id   = 21
-X_data   = np.load(f"data/{x_data_filename}.npy")
+x_data_filename = 'X_data_merged_v2'
+y_data_filename = 'y_data_merged_v2'
+seq_id   = 54
+X_data   = np.load(f"data_full/{x_data_filename}.npy")
+y_data   = np.load(f"data_full/{y_data_filename}.npy")
+gesture_map = {0: "ScrollUp", 1: "ScrollDown", 2: "ZoomIn", 3: "ZoomOut", 4: "AppSwitchLeft", 5: "AppSwitchRight"}
 
 # x_data_filename = 'gesture_003'
 # seq_id   = 0
@@ -57,8 +60,9 @@ def draw_hand_in_frame(frame, frame_num, coord_data):
     # First draw Frame number in bottom of image
     cv2.putText(frame, f"Frame {frame_num:02d}", (15, IMG_H - 15), cv2.FONT_HERSHEY_SIMPLEX, 1.0, BLACK, 2, cv2.LINE_AA)
 
-    # Also draw file name
-    cv2.putText(frame, f"File: data/{x_data_filename}.npy, Seq: {seq_id:02d}", (225, IMG_H - 15), cv2.FONT_HERSHEY_SIMPLEX, 1.0, BLACK, 2, cv2.LINE_AA)
+    # Also draw file name, sequence number, and true gesture
+    y_label = gesture_map[np.argmax(y_data[seq_id, :])]
+    cv2.putText(frame, f"File: data/{x_data_filename}.npy, Seq: {seq_id:02d}, Gesture: {y_label}", (225, IMG_H - 15), cv2.FONT_HERSHEY_SIMPLEX, 1.0, BLACK, 2, cv2.LINE_AA)
     f"data/{x_data_filename}.npy"
 
     # Then draw all points
