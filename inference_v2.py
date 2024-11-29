@@ -45,6 +45,8 @@ LOGGING        = True                               # If logging is enabled, sto
 
 
 gesture_map = {0: "ScrollUp", 1: "ScrollDown", 2: "ZoomIn", 3: "ZoomOut", 4: "AppSwitchLeft", 5: "AppSwitchRight"}
+#flag to track if a gesture has already been predicted (this is for the freeze reset logic)
+predicted = False
 # Load LSTM model for gesture classification
 lstm_model = load_model('nn_weights/lstm_2class_20241127_test2.h5')
 
@@ -66,19 +68,21 @@ def update_buffers(gesture_seq, landmarks):
     global gesture_idx
     global gesture_label
     global reached_first_still
+    global predicted
 
     hand_data = np.array([[lm.x, lm.y, lm.z] for lm in landmarks.landmark])
     buffer_seq[0, buffer_idx, :, :] = hand_data
     buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ       
 
-    if reached_first_still:
+    if reached_first_still and not predicted:
         print(f"Recording gesture index {gesture_idx}")
         gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)
         gesture_seq[0, -1, :, :] = hand_data
 
         if np.all(gesture_seq[0, :, :, :] != 0):  # Buffer is full
             gesture_label = predict_gesture(gesture_seq)
-
+            predicted = True  # Set flag to stop further predictions
+            print(f"Gesture predicted: {gesture_label}")
     return gesture_seq
 
 # Function to predict gesture based on the current buffers
@@ -102,6 +106,16 @@ def predict_gesture(gesture_seq):
     predicted_gesture = gesture_map.get(predicted_class, "Unknown")
     print(f"Predicted Gesture: {predicted_gesture}")
     return predicted_gesture
+
+# Function to reset everything once the hand becomes still
+def reset_buffers():
+    global gesture_seq, buffer_idx, gesture_idx, reached_first_still, predicted
+    gesture_seq = np.zeros((1, 10, 21, 3))
+    buffer_idx = 0
+    gesture_idx = 0
+    reached_first_still = False
+    predicted = False
+    print("Buffers and flags reset. Ready for next gesture.")
 
 # Custom drawing function
 def draw_results(image, detection_result, gesture_label):
@@ -158,6 +172,7 @@ with mp_hands.Hands(
 
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
+    # Main loop for processing the webcam feed
     while cap.isOpened():
         success, image = cap.read()
         if not success:
@@ -173,17 +188,21 @@ with mp_hands.Hands(
         if results.multi_hand_landmarks and (current_time - last_save_time >= FRAME_DELAY):
             last_save_time = current_time
             gesture_seq = update_buffers(gesture_seq, results.multi_hand_landmarks[0])
-            
+
             if is_still():
-                gesture_label = "Still"
                 if not reached_first_still:
                     reached_first_still = True
+                    print("Hand is still. Starting gesture collection.")
+                elif predicted:
+                    reset_buffers()  # Reset after predicting a gesture
+            else:
+                print("Hand is moving.")
+
         elif not results.multi_hand_landmarks:
             gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)
             gesture_seq[0, -1, :, :] = np.zeros((21, 3))
             gesture_label = "N/A"
-            reached_first_still = False
-            gesture_idx = 0
+            reset_buffers()  # Reset everything if no hands are detected
 
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
