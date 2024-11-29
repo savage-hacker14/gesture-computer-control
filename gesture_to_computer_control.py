@@ -4,9 +4,10 @@ import pyautogui
 import cv2
 import mediapipe as mp
 import time
+from inference_v2 import predict_gesture
 
 # Load the trained model
-model = load_model("gesture_classification_model.h5")  # Replace with your model's file name
+model = load_model("nn_weights/lstm_2class_20241127_test2.h5")  
 
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
@@ -22,8 +23,11 @@ gesture_actions = {
     5: lambda: pyautogui.hotkey('alt', 'right')  # Navigate forward
 }
 
+keypoint_buffer = []
+
 # Real-time gesture recognition and action execution
 def recognize_and_act():
+    global keypoint_buffer
     cap = cv2.VideoCapture(0)
     print("Press 'q' to exit.")
     
@@ -37,22 +41,18 @@ def recognize_and_act():
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = hands.process(image)
 
+        # Inside the real-time loop:
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                # Extract key points
-                keypoints = np.array([[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark]).flatten()
-                keypoints = keypoints.reshape(1, -1)  # Prepare input for the model
-
-                # Predict gesture
-                prediction = model.predict(keypoints)
-                gesture_id = np.argmax(prediction)
-
-                # Perform corresponding action
-                action = gesture_actions.get(gesture_id)
-                if action:
-                    action()
-                    time.sleep(1)  # Add delay to avoid repeated actions
-
+                keypoints = preprocess_keypoints(hand_landmarks)
+                gesture_id = predict_gesture(keypoints)
+        
+            # Perform corresponding action
+            action = gesture_actions.get(gesture_id)
+            if action:
+                action()
+                time.sleep(1)
+        
         # Display frame
         cv2.imshow("Gesture Recognition", frame)
 

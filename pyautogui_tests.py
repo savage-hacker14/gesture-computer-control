@@ -6,7 +6,7 @@
 # Import remote control library
 import pyautogui
 
-# Import time library for delays
+# Import time library for delays                                        
 import time
 
 # Test alt_tab for window switching
