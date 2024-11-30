@@ -28,8 +28,8 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 FONT  = cv2.FONT_HERSHEY_COMPLEX_SMALL
-RESIZE_W = 1280 
-RESIZE_H = 720
+RESIZE_W = 640 
+RESIZE_H = 480
 
 # Define model parameters
 GESTURE_TIME   = 3                                  # [s], time to collect all frames
@@ -41,14 +41,14 @@ gesture_idx    = 0
 still_thres    = 0.15                               # Normalized distances - May need to adjust depending on FRAME_DELAY
 buffer_counter = 1
 reached_first_still = False
-LOGGING        = True                               # If logging is enabled, store each gesture to enumerated buffer .npy file in data_collection/data folder
+LOGGING        = False                               # If logging is enabled, store each gesture to enumerated buffer .npy file in data_collection/data folder
 
 
 gesture_map = {0: "ScrollUp", 1: "ScrollDown", 2: "ZoomIn", 3: "ZoomOut", 4: "AppSwitchLeft", 5: "AppSwitchRight"}
 #flag to track if a gesture has already been predicted (this is for the freeze reset logic)
 predicted = False
 # Load LSTM model for gesture classification
-lstm_model = load_model('nn_weights/lstm_2class_20241127_test2.h5')
+lstm_model = load_model('nn_weights/lstm_6class_20241127_test2.h5')
 
 # Define an array to store the hand key point sequence (gesture buffer)
 buffer_seq    = np.zeros((1, 10, 21, 3))        # Continuously grabbing hand landmark points
@@ -115,7 +115,7 @@ def reset_buffers():
     gesture_idx = 0
     reached_first_still = False
     predicted = False
-    print("Buffers and flags reset. Ready for next gesture.")
+    #print("Buffers and flags reset. Ready for next gesture.")
 
 # Custom drawing function
 def draw_results(image, detection_result, gesture_label):
@@ -161,7 +161,7 @@ def draw_results(image, detection_result, gesture_label):
     return image
 
 # Open the webcam
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 

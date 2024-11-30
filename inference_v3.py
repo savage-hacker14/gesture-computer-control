@@ -57,7 +57,7 @@ gesture_map = {0: "ScrollUp", 1: "ScrollDown", 2: "ZoomIn", 3: "ZoomOut", 4: "Ap
 #flag to track if a gesture has already been predicted (this is for the freeze reset logic)
 predicted = False
 # Load LSTM model for gesture classification
-lstm_model = load_model('nn_weights/lstm_2class_20241127_test2.h5')
+lstm_model = load_model('nn_weights/lstm_6class_20241127_test2.h5')
 
 # Define an array to store the hand key point sequence (gesture buffer)
 buffer_seq    = np.zeros((1, 10, 21, 3))        # Continuously grabbing hand landmark points
