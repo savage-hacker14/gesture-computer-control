@@ -40,28 +40,6 @@ RESIZE_H = 720
 is_mac = platform.system() == "Darwin"
 is_windows = platform.system() == "Windows"
 
-# Gesture-action mapping
-if is_mac:
-    gesture_actions = {
-        "ScrollUp": lambda: pyautogui.scroll(100),  # Scroll up
-        "ScrollDown": lambda: pyautogui.scroll(-100),  # Scroll down
-        "ZoomIn": lambda: pyautogui.hotkey('command', '+'),  # Zoom in
-        "ZoomOut": lambda: pyautogui.hotkey('command', '-'),  # Zoom out
-        "AppSwitchLeft": lambda: pyautogui.hotkey('command', '['),  # Navigate back
-        "AppSwitchRight": lambda: pyautogui.hotkey('command', ']')  # Navigate forward
-    }
-elif is_windows:
-    gesture_actions = {
-        "ScrollUp": lambda: pyautogui.scroll(100),  # Scroll up
-        "ScrollDown": lambda: pyautogui.scroll(-100),  # Scroll down
-        "ZoomIn": lambda: pyautogui.hotkey('ctrl', '+'),  # Zoom in
-        "ZoomOut": lambda: pyautogui.hotkey('ctrl', '-'),  # Zoom out
-        "AppSwitchLeft": lambda: pyautogui.hotkey('alt', 'left'),  # Navigate back
-        "AppSwitchRight": lambda: pyautogui.hotkey('alt', 'right')  # Navigate forward
-    }
-else:
-    raise RuntimeError("Unsupported operating system. Only macOS and Windows are supported.")
-
 # Define model parameters
 GESTURE_TIME   = 3                                  # [s], time to collect all frames
 FRAMES_PER_SEQ = 10
@@ -69,10 +47,10 @@ FRAME_DELAY    = GESTURE_TIME / FRAMES_PER_SEQ      # [s]
 last_save_time = 0
 buffer_idx     = 0
 gesture_idx    = 0
-still_thres    = 0.15                               # Normalized distances - May need to adjust depending on FRAME_DELAY
+still_thres    = 0.20                               # Normalized distances - May need to adjust depending on FRAME_DELAY
 buffer_counter = 1
 reached_first_still = False
-LOGGING        = True                               # If logging is enabled, store each gesture to enumerated buffer .npy file in data_collection/data folder
+LOGGING        = False                               # If logging is enabled, store each gesture to enumerated buffer .npy file in data_collection/data folder
 
 
 gesture_map = {0: "ScrollUp", 1: "ScrollDown", 2: "ZoomIn", 3: "ZoomOut", 4: "AppSwitchLeft", 5: "AppSwitchRight"}
@@ -92,6 +70,7 @@ def is_still():
     total_diff = np.sum(np.sqrt(np.sum((buffer_seq[0, buffer_idx - 1] - buffer_seq[0, buffer_idx - 2]) ** 2, axis=1)))
     print(f"Total diff for stillness: {total_diff}")
     return total_diff < still_thres
+
 
 # Function to process landmarks into the required buffer format
 def update_buffers(gesture_seq, landmarks):
@@ -113,8 +92,9 @@ def update_buffers(gesture_seq, landmarks):
         if np.all(gesture_seq[0, :, :, :] != 0):  # Buffer is full
             gesture_label = predict_gesture(gesture_seq)
             predicted = True  # Set flag to stop further predictions
-            print(f"Gesture predicted: {gesture_label}")
+            #print(f"Gesture predicted: {gesture_label}")
     return gesture_seq
+
 
 # Function to predict gesture based on the current buffers
 def predict_gesture(gesture_seq):
@@ -144,11 +124,49 @@ def action(predicted_gesture):
     Recognizes gestures and maps them to computer commands.
     """
     print("Starting gesture recognition. Press 'q' to exit.")
-    action = gesture_actions.get(predicted_gesture)
-    if action:
-        print(f"Executing action for gesture: {predicted_gesture}")
-        action()
-        time.sleep(1)
+    # Gesture-action mapping
+    if is_mac:
+        if (predicted_gesture == "ScrollUp"):
+            pyautogui.scroll(300)
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.scroll(-300)
+        elif (predicted_gesture == "ZoomIn"):
+            pyautogui.hotkey('command', '+')
+        elif (predicted_gesture == "ZoomOut"):
+            pyautogui.hotkey('command', '-')
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.hotkey('command', '[')
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.hotkey('command', ']')
+    elif is_windows:
+        if (predicted_gesture == "ScrollUp"):
+            pyautogui.scroll(300)
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.scroll(-300)
+        elif (predicted_gesture == "ZoomIn"):
+            pyautogui.hotkey('ctrl', '+')
+        elif (predicted_gesture == "ZoomOut"):
+            pyautogui.hotkey('ctrl', '-')
+        elif (predicted_gesture == "AppSwitchLeft"):
+            pyautogui.keyDown('alt')
+            pyautogui.keyDown('tab')
+            pyautogui.keyUp('tab')
+            time.sleep(0.2)
+            pyautogui.keyDown('left')
+            pyautogui.keyUp('left')
+            pyautogui.keyDown('left')
+            pyautogui.keyUp('left')
+            pyautogui.keyUp('alt')
+        elif (predicted_gesture == "AppSwitchRight"):
+            pyautogui.keyDown('alt')
+            pyautogui.keyDown('tab')
+            pyautogui.keyUp('tab')
+            time.sleep(0.2)
+            pyautogui.keyUp('alt')
+    else:
+        raise RuntimeError("Unsupported operating system. Only macOS and Windows are supported.")
+    
+    time.sleep(0.5)
 
 
 # Function to reset everything once the hand becomes still
@@ -159,7 +177,7 @@ def reset_buffers():
     gesture_idx = 0
     reached_first_still = False
     predicted = False
-    print("Buffers and flags reset. Ready for next gesture.")
+    #print("Buffers and flags reset. Ready for next gesture.")
 
 # Custom drawing function
 def draw_results(image, detection_result, gesture_label):
