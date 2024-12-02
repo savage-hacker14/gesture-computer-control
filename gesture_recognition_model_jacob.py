@@ -10,6 +10,10 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Set seed (for evaluation purposes)
+np.random.seed(123)
 
 # feature extraction module
 def extract_inception_features(img):
@@ -25,10 +29,10 @@ def extract_inception_features(img):
 def load_and_preprocess_data():
     # loading data
     #X_data = np.load('data_collection/data/x_data_jacob_gesture_2_3_combined.npy')
-    X_data = np.load('data_collection/data_full/X_data_merged.npy')
+    X_data = np.load('data_collection/data_full/X_data_6class_merged_v2.npy')
     # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
     #Y_data = np.load('data_collection/data/y_data_jacob_gesture_2_3_combined.npy')
-    Y_data = np.load('data_collection/data_full/Y_data_merged.npy')
+    Y_data = np.load('data_collection/data_full/Y_data_6class_merged_v2.npy')
     #print(f"Y_data: \n{Y_data}")
 
     # Make sure to only use the ZoomIn and ZoomOut columns in the dataset
@@ -98,6 +102,14 @@ def evaluate_model(model, features, labels):
     print("Classification Report:")
     print(classification_report(y_true_classes, y_pred_classes, target_names=class_names))
     
+    # Create heapmap for confusion matrix
+    sns.heatmap(cm, annot=True, xticklabels=class_names, yticklabels=class_names)
+    plt.title("6-Class LSTM Confusion Matrix: 88 Gestures")
+    plt.xticks(rotation=0)
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.show()
+
     # ROC  curve
     # fpr, tpr, _ = roc_curve(y_true_classes, y_pred[:, 1])
     # roc_auc = auc(fpr, tpr)
@@ -131,17 +143,19 @@ if __name__ == "__main__":
     # Y_data_train = Y_data[-test_idxs]
     # Y_data_test = Y_data[test_idxs]
     print(f"Input train shape: {combined_features_train.shape}\nInput test shape: {combined_features_test.shape}")
-    print(f"Train Frequences: ZoomIn: {np.sum(Y_data_train[:, 0])}, ZoomOut: {np.sum(Y_data_train[:, 1])}")
+    #print(f"Train Frequences: ZoomIn: {np.sum(Y_data_train[:, 0])}, ZoomOut: {np.sum(Y_data_train[:, 1])}")
 
     # constructing the model
-    model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1])
+    #model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1])
     #model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1], load_model_pth="nn_weights/lstm_2class_20241115_test.h5")
     
     # training and validating the model
-    train_and_validate_model(model, combined_features_train, Y_data_train)
+    #train_and_validate_model(model, combined_features_train, Y_data_train)
 
     # Save model
-    save_model(model, "nn_weights/lstm_2class_20241127_test.h5")
+    #save_model(model, "nn_weights/lstm_2class_20241127_test.h5")
+    model = load_model("nn_weights/lstm_6class_20241127_test2.h5")
+    print(model.summary())
     
     # evaluating the model
     evaluate_model(model, combined_features_test, Y_data_test)
