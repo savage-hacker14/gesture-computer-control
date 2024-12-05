@@ -157,4 +157,13 @@ This folder contains scripts for testing and visualizing hand landmark detection
 These scripts collectively serve to experiment with and validate hand gesture recognition techniques using different inputs and visualization methods.
 
 ## 1.5. Literature Review / Resources
-in progress
+Dynamic hand gesture recognition has been extensively studied, leveraging various methodologies and datasets. The following key works informed the design and implementation of our project:
+
+Deep Learning Hybrid Architectures
+Yaseen et al. (2020) proposed a hybrid architecture that integrates Google’s MediaPipe for extracting hand regions of interest (ROI) with a pre-trained Inception-V3 model for spatial feature extraction. The spatial features were passed through an LSTM-Dense model to capture temporal patterns, resulting in significant accuracy improvements compared to traditional 3D CNN architectures. This work highlights the efficiency of combining spatial and temporal learning for dynamic gestures.
+
+Pre-trained Convolutional Neural Networks (CNNs)
+Szegedy et al. (2016) developed Inception-V3, a pre-trained convolutional neural network designed for image classification tasks. This model has been adapted for gesture recognition due to its robust deep feature extraction capabilities and compatibility with global pooling layers, making it suitable for analyzing complex hand gestures.
+
+3D Convolutional Networks
+Tran et al. (2015) introduced 3D convolutional neural networks (3D CNNs) to learn spatiotemporal features by stacking RGB image frames into a volumetric input. While effective for capturing both spatial and temporal information, 3D CNNs are computationally intensive, making them less suitable for real-time applications or hardware-limited environments.
