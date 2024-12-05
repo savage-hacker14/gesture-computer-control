@@ -1,10 +1,10 @@
 # 1. CS5100 Final Project: Computer Remote Control via Dynamic Hand Gestures
 **Authors** <br>
 Jacob Krucinski - [email](mailto:krucinski.j@northeastern.edu) <br>
-Hau Ha <br>
-Maalolan Bharaniraj <br>
+Hau Ha - [email](mailto:ha.hau@northeastern.edu) <br>
+Maalolan Bharaniraj - [email](mailto:krucinski.j@northeastern.edu) <br>
 Yiting Wu - [email](mailto:wu.yitin@northeastern.eduu) <br>
-Andrew Panzone
+Andrew Panzone- [email](mailto:panzone.an@northeastern.edu) <br>
 
 **NOTE: This README is a work-in-progress**
 
@@ -133,7 +133,7 @@ collection. If you do not feel comfortable with this facial data collection, you
 the `img_data_{}.npy` file from your upload to OneDrive.
 
 ## 1.4. Repository Organization
-### 1.4.1. `data_collection` folder ** In Progress **
+### 1.4.1. `data_collection` folder 
 
 This folder contains scripts developed for collecting and analyzing hand landmark data using computer vision libraries. The main components include:
 
@@ -143,7 +143,7 @@ This folder contains scripts developed for collecting and analyzing hand landmar
 
 These scripts are integral for generating datasets needed for hand gesture recognition and related applications.
 
-### 1.4.2. `mediapipe` test ** in progress **
+### 1.4.2. `mediapipe` test 
 
 
 This folder contains scripts for testing and visualizing hand landmark detection using MediaPipe and OpenCV. These scripts provide a framework to analyze and improve hand gesture recognition, with features such as real-time visualization and performance tracking.
