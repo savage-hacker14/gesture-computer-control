@@ -6,8 +6,6 @@ Maalolan Bharaniraj - [email](mailto:krucinski.j@northeastern.edu) <br>
 Yiting Wu - [email](mailto:wu.yitin@northeastern.eduu) <br>
 Andrew Panzone- [email](mailto:panzone.an@northeastern.edu) <br>
 
-**NOTE: This README is a work-in-progress**
-
 ## 1.1. Project Overview
 In this project, we aim to explore the intersection of computer vision and machine learning 
 for human gesture recognition, specifically focusing on dynamic hand gestures. 
