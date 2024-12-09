@@ -165,3 +165,22 @@ Szegedy et al. (2016) developed Inception-V3, a pre-trained convolutional neural
 
 3D Convolutional Networks
 Tran et al. (2015) introduced 3D convolutional neural networks (3D CNNs) to learn spatiotemporal features by stacking RGB image frames into a volumetric input. While effective for capturing both spatial and temporal information, 3D CNNs are computationally intensive, making them less suitable for real-time applications or hardware-limited environments.
+
+
+## References
+Yaseen, O.-J. Kwon, J. Kim, S. Jamil, J. Lee,
+and F. Ullah, “Next-gen dynamic hand ges-
+ture recognition: Mediapipe, inception-v3 and
+lstm-based enhanced deep learning model,” Elec-
+tronics, vol. 13, no. 16, 2024. [Online]. Available:
+https://www.mdpi.com/2079-9292/13/16/3233
+
+C. Szegedy, V. Vanhoucke, S. Ioffe, J. Shlens, and
+Z. Wojna, “Rethinking the inception architecture
+for computer vision,” 2015. [Online]. Available:
+https://arxiv.org/abs/1512.00567
+
+D. Tran, L. Bourdev, R. Fergus, L. Torresani,
+and M. Paluri, “Learning spatiotemporal features
+with 3d convolutional networks,” 2015. [Online].
+Available: https://arxiv.org/abs/1412.0767
