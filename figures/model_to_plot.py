@@ -4,7 +4,7 @@ from tensorflow.keras.utils import plot_model
 
 # Paths to your models
 model_6class_path = 'nn_weights/lstm_6class_20241127_test2.h5'
-model_2class_path = 'nn_weights/lstm_2class_20241127_test.h5'
+model_2class_path = 'nn_weights/lstm_2class_20241121_test.h5'
 
 # Load the models
 model_6class = load_model(model_6class_path)

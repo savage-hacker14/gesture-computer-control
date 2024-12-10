@@ -25,9 +25,7 @@ print(tf.__version__)
 
 
 # Import custom libraries
-import sys
-sys.path.append("..")
-from cvfpscalc import CvFpsCalc
+from mediapipe_tests.cvfpscalc import CvFpsCalc
 
 # Helpful mediapipe shortcuts
 mp_drawing = mp.solutions.drawing_utils
