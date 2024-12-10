@@ -23,8 +23,6 @@ from matplotlib.animation import FuncAnimation
 
 
 # Import custom libraries
-import sys
-sys.path.append("..")
 from cvfpscalc import CvFpsCalc
 
 # Helpful mediapipe shortcuts
@@ -157,7 +155,7 @@ def plot_hand_3D(detection_result):
 
 
 # Open the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 

@@ -29,9 +29,9 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 
 # Async callback function for printing results
 def process_result(result: mp.tasks.vision.HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
-    print('hand landmarker result: {}'.format(result))
+    #print('hand landmarker result: {}'.format(result))
     processed = plot_points(img=output_image, landmarker_result=result, timestamp_ms=timestamp_ms)
-    print("processing finished")
+    #print("processing finished")
     #cv2.imshow(processed)
 
 
@@ -59,7 +59,7 @@ def plot_points(landmarker_result: mp.tasks.vision.HandLandmarkerResult, img: mp
         x, y, w, h = cv2.boundingRect(landmark_array)
         return [x, y, x + w, y + h]
 
-    print("processing")
+    #print("processing")
     if (len(landmarker_result.hand_landmarks) > 0):
         landmarks = landmarker_result.hand_landmarks[0]
         img_H, img_W = img.shape[:2]

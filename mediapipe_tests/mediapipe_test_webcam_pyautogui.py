@@ -26,8 +26,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Import custom libraries
-import sys
-sys.path.append("..")
 from cvfpscalc import CvFpsCalc
 
 # Helpful mediapipe shortcuts
