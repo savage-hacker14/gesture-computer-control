@@ -1,3 +1,13 @@
+# inference.py
+# CS 5100 - Fall 2024
+# Final Project: Testing Hand Landmark Detection with webcam feed
+#
+# This script performs the inference using the trained model 
+#
+# FPS at 1280x720: XX
+# FPS at 640x480: XX
+
+
 # Import OpenCV library
 import cv2
 
@@ -5,6 +15,10 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time
+
+# Import pyautogui
+import pyautogui
+import platform
 
 # Import plotting libraries
 from tensorflow.keras.models import load_model
@@ -26,8 +40,13 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 FONT  = cv2.FONT_HERSHEY_COMPLEX_SMALL
-RESIZE_W = 640 
-RESIZE_H = 480
+RESIZE_W = 1280 
+RESIZE_H = 720
+
+
+# Detect the operating system
+is_mac = platform.system() == "Darwin"
+is_windows = platform.system() == "Windows"
 
 # Define model parameters
 GESTURE_TIME   = 3                                  # [s], time to collect all frames
@@ -35,8 +54,7 @@ FRAMES_PER_SEQ = 10
 FRAME_DELAY    = GESTURE_TIME / FRAMES_PER_SEQ      # [s]
 last_save_time = 0
 buffer_idx     = 0
-gesture_idx    = 0
-still_thres    = 0.15                               # Normalized distances - May need to adjust depending on FRAME_DELAY
+still_thres    = 0.20                               # Normalized distances - May need to adjust depending on FRAME_DELAY
 buffer_counter = 1
 reached_first_still = False
 LOGGING        = False                               # If logging is enabled, store each gesture to enumerated buffer .npy file in data_collection/data folder
@@ -57,8 +75,8 @@ gesture_label = ""  # Variable to store current gesture label
 def is_still():
     global buffer_idx
     total_diff = np.sum(np.sqrt(np.sum((buffer_seq[0, buffer_idx - 1] - buffer_seq[0, buffer_idx - 2]) ** 2, axis=1)))
-    print(f"Total diff for stillness: {total_diff}")
     return total_diff < still_thres
+
 
 # Function to process landmarks into the required buffer format
 def update_buffers(gesture_seq, landmarks):
@@ -73,15 +91,15 @@ def update_buffers(gesture_seq, landmarks):
     buffer_idx = (buffer_idx + 1) % FRAMES_PER_SEQ       
 
     if reached_first_still and not predicted:
-        print(f"Recording gesture index {gesture_idx}")
+        print(f"Recording gesture frame...")
         gesture_seq = np.roll(gesture_seq, shift=-1, axis=1)
         gesture_seq[0, -1, :, :] = hand_data
 
         if np.all(gesture_seq[0, :, :, :] != 0):  # Buffer is full
             gesture_label = predict_gesture(gesture_seq)
             predicted = True  # Set flag to stop further predictions
-            print(f"Gesture predicted: {gesture_label}")
     return gesture_seq
+
 
 # Function to predict gesture based on the current buffers
 def predict_gesture(gesture_seq):
@@ -104,6 +122,57 @@ def predict_gesture(gesture_seq):
     predicted_gesture = gesture_map.get(predicted_class, "Unknown")
     print(f"Predicted Gesture: {predicted_gesture}")
     return predicted_gesture
+
+
+def action(predicted_gesture):
+    """
+    Recognizes gestures and maps them to computer commands.
+    """
+    print("Starting gesture recognition. Press 'q' to exit.")
+    # Gesture-action mapping
+    if is_mac:
+        if (predicted_gesture == "ScrollUp"):
+            pyautogui.scroll(300)
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.scroll(-300)
+        elif (predicted_gesture == "ZoomIn"):
+            pyautogui.hotkey('command', '+')
+        elif (predicted_gesture == "ZoomOut"):
+            pyautogui.hotkey('command', '-')
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.hotkey('command', '[')
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.hotkey('command', ']')
+    elif is_windows:
+        if (predicted_gesture == "ScrollUp"):
+            pyautogui.scroll(300)
+        elif (predicted_gesture == "ScrollDown"):
+            pyautogui.scroll(-300)
+        elif (predicted_gesture == "ZoomIn"):
+            pyautogui.hotkey('ctrl', '+')
+        elif (predicted_gesture == "ZoomOut"):
+            pyautogui.hotkey('ctrl', '-')
+        elif (predicted_gesture == "AppSwitchLeft"):
+            pyautogui.keyDown('alt')
+            pyautogui.keyDown('tab')
+            pyautogui.keyUp('tab')
+            time.sleep(0.2)
+            pyautogui.keyDown('left')
+            pyautogui.keyUp('left')
+            pyautogui.keyDown('left')
+            pyautogui.keyUp('left')
+            pyautogui.keyUp('alt')
+        elif (predicted_gesture == "AppSwitchRight"):
+            pyautogui.keyDown('alt')
+            pyautogui.keyDown('tab')
+            pyautogui.keyUp('tab')
+            time.sleep(0.2)
+            pyautogui.keyUp('alt')
+    else:
+        raise RuntimeError("Unsupported operating system. Only macOS and Windows are supported.")
+    
+    time.sleep(0.5)
+
 
 # Function to reset everything once the hand becomes still
 def reset_buffers():
@@ -159,7 +228,7 @@ def draw_results(image, detection_result, gesture_label):
     return image
 
 # Open the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
@@ -188,11 +257,14 @@ with mp_hands.Hands(
             gesture_seq = update_buffers(gesture_seq, results.multi_hand_landmarks[0])
 
             if is_still():
+                gesture_label = "Still"
                 if not reached_first_still:
                     reached_first_still = True
                     print("Hand is still. Starting gesture collection.")
                 elif predicted:
-                    reset_buffers()  # Reset after predicting a gesture
+                    predicted_gesture = predict_gesture(gesture_seq)
+                    action(predicted_gesture)
+                    reset_buffers()  # Reset buffers after performing action
             else:
                 print("Hand is moving.")
 
@@ -210,6 +282,7 @@ with mp_hands.Hands(
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
+        
+    
 cap.release()
 cv2.destroyAllWindows()
