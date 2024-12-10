@@ -154,7 +154,24 @@ This folder contains scripts for testing and visualizing hand landmark detection
 
 These scripts collectively serve to experiment with and validate hand gesture recognition techniques using different inputs and visualization methods.
 
-## 1.5. Literature Review / Resources
+## 1.5. Key Scripts
+### Data Collection and Processing
+- **`data_collection_FULL.py`**: Captures gesture data using MediaPipe for real-time hand detection.
+
+### Model Training
+- **`train_2class_LSTM.py`**: Trains an LSTM model for two classes (ZoomIn/ZoomOut).
+- **`train_6class_LSTM.py`**: Trains an LSTM model for all six gesture classes.
+
+### Model Inference
+- **`inference_2class.py`**: Performs inference for ZoomIn/ZoomOut gestures.
+- **`inference_6class.py`**: Performs inference for all six gestures.
+
+### Data Structure Testing
+- **`gesture_data_struct_buffer.py`**: Ensures data buffer reliability.
+- **`gesture_data_struct_test.py`**: Validates gesture data structures.
+
+
+## 1.6. Literature Review / Resources
 Dynamic hand gesture recognition has been extensively studied, leveraging various methodologies and datasets. The following key works informed the design and implementation of our project:
 
 Deep Learning Hybrid Architectures
