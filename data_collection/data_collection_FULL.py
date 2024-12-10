@@ -16,7 +16,7 @@ from datetime import datetime
 
 # Import custom libraries
 import sys
-sys.path.append("..")
+sys.path.append("../mediapipe_tests")
 from cvfpscalc import CvFpsCalc
 
 # Helpful mediapipe shortcuts
@@ -32,8 +32,8 @@ WHITE    = (255, 255, 255)
 GREEN    = (0, 255, 0)
 BLACK    = (0, 0, 0)
 FONT     = cv2.FONT_HERSHEY_COMPLEX_SMALL
-RESIZE_W = 1280 
-RESIZE_H = 720
+RESIZE_W = 640 
+RESIZE_H = 480
 
 
 # Define MediaPipe color palette in RGB-255 format (for use in 3D scatter plot
@@ -232,7 +232,7 @@ img_data  = np.zeros((n_seq, IMG_SIZE, IMG_SIZE, 3, FRAMES_PER_SEQ))
 
 
 # Open the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
