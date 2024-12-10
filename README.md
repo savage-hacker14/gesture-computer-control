@@ -60,7 +60,7 @@ conda create -n venv python=3.10
 To install all the library requirements, please run the following terminal command
 from the root directory of the repository:
 ```
-pip install -r requirements.txt
+pip install -r requirements_min.txt
 ```
 
 The environment size is ~2GB including TensorFlow.

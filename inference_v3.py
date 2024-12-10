@@ -17,9 +17,7 @@ import tensorflow as tf
 print(tf.__version__)
 
 # Import custom libraries
-import sys
-sys.path.append("..")
-from cvfpscalc import CvFpsCalc
+from mediapipe_tests.cvfpscalc import CvFpsCalc
 
 # Helpful mediapipe shortcuts
 mp_drawing = mp.solutions.drawing_utils
@@ -223,7 +221,7 @@ def draw_results(image, detection_result, gesture_label):
     return image
 
 # Open the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
