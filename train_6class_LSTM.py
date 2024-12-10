@@ -1,4 +1,10 @@
-# gesture_recognition_model.py
+# train_6class_LSTM.py
+# CS 5100 - Fall 2024
+# Final Project: Training 6-class LSTM Only model
+#
+# This script performs the inference using the trained model 
+
+
 import tensorflow as tf
 from tensorflow.keras.applications import InceptionV3
 from tensorflow.keras import Input
@@ -15,56 +21,29 @@ import seaborn as sns
 # Set seed (for evaluation purposes)
 np.random.seed(123)
 
-# feature extraction module
-def extract_inception_features(img):
-    inception_base = InceptionV3(weights='imagenet', include_top=False, input_shape=(299, 299, 3))
-    img = img_to_array(img)
-    img = tf.image.resize(img, (299, 299))
-    img = np.expand_dims(img, axis=0)
-    img = tf.keras.applications.inception_v3.preprocess_input(img)
-    features = inception_base.predict(img)
-    return features
-
 # data_loading_and_preprocessing
 def load_and_preprocess_data():
     # loading data
-    #X_data = np.load('data_collection/data/x_data_jacob_gesture_2_3_combined.npy')
     X_data = np.load('data_collection/data_full/X_data_6class_merged_v2.npy')
-    # sub_images = np.load('data_collection\data\img_data_20241030_0130.npy')
-    #Y_data = np.load('data_collection/data/y_data_jacob_gesture_2_3_combined.npy')
-    Y_data = np.load('data_collection/data_full/Y_data_6class_merged_v2.npy')
-    #print(f"Y_data: \n{Y_data}")
-
+    Y_data = np.load('data_collection/data_full/y_data_6class_merged_v2.npy')
+    
     # Make sure to only use the ZoomIn and ZoomOut columns in the dataset
     #Y_data = Y_data[:, 2:4]
 
-    #n_seq, N_LANDMARKS, N_COORDS, FRAMES_PER_SEQ = X_data.shape
-    #X_data_reshaped = X_data.reshape(n_seq, FRAMES_PER_SEQ, N_LANDMARKS * N_COORDS)
+    # Reshape data for proper batching
     X_data_reshaped = np.transpose(X_data, (0, 3, 1, 2))
     
-    # resizing image for Inception V3
-    # Make the array writable by copying it
-    # sub_images_resized = np.array([tf.image.resize(img, (299, 299)).numpy() for img in sub_images.reshape(-1, 128, 128, 3)])
-    # sub_images_resized = sub_images_resized.copy()  # Explicitly make the array writable
-
-    # extract Inception V3 features
-    # inception_features = np.array([extract_inception_features(img) for img in sub_images_resized])
-    # inception_features = inception_features.reshape(X_data.shape[0], X_data.shape[1], -1)
-    
-    # merge key points and Inception features
-    # combined_features = np.concatenate((X_data, inception_features), axis=-1)
     return X_data_reshaped, Y_data
 
 #model building module
 def build_model(input_shape, num_classes, load_model_pth=None):
-    # LSTM 256 and Dense 128 (deeper model) yielded only 78% validation accuracy model
     if (not load_model_pth):
         inputs = Input(shape=input_shape)
         x = Reshape((10, 63))(inputs)
-        x = LSTM(64, activation='tanh')(x)
-        x = Dense(128, activation='sigmoid')(x)
+        x = LSTM(128, activation='tanh')(x)
+        x = Dense(64, activation='sigmoid')(x)
         x = Dropout(0.2)(x)
-        x = Dense(64, activation='relu')(x)
+        x = Dense(32, activation='relu')(x)
         outputs = Dense(num_classes, activation='softmax')(x)
         
         model = Model(inputs, outputs)
@@ -72,7 +51,7 @@ def build_model(input_shape, num_classes, load_model_pth=None):
         opt = Adam(learning_rate=0.001)
         model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
     else:
-        # Load model from 
+        # Load model from model path
         print("Loading pre-trained model...")
         model = load_model(load_model_pth)
 
@@ -99,18 +78,20 @@ def evaluate_model(model, features, labels):
     
     # classification report
     class_names = ["ScrollUp", "ScrollDown", "ZoomIn", "ZoomOut", "AppSwitchLeft", "AppSwitchRight"]
+    #class_names = ["ZoomIn", "ZoomOut"]
     print("Classification Report:")
     print(classification_report(y_true_classes, y_pred_classes, target_names=class_names))
     
     # Create heapmap for confusion matrix
     sns.heatmap(cm, annot=True, xticklabels=class_names, yticklabels=class_names)
+    #plt.title("2-Class LSTM Confusion Matrix: 36 Gestures")
     plt.title("6-Class LSTM Confusion Matrix: 88 Gestures")
     plt.xticks(rotation=0)
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
     plt.show()
 
-    # ROC  curve
+    # ROC curve
     # fpr, tpr, _ = roc_curve(y_true_classes, y_pred[:, 1])
     # roc_auc = auc(fpr, tpr)
     # plt.figure()
@@ -132,30 +113,23 @@ if __name__ == "__main__":
     # loading and preprocessing data
     combined_features, Y_data = load_and_preprocess_data()
     
-    # TODO: Make sure to set aside a shuffled train and test set for evaluation
-    # n_total_obs = combined_features.shape[0]
+    # Make sure to set aside a shuffled train and test set for evaluation
     combined_features_train, combined_features_test, Y_data_train, Y_data_test = train_test_split(combined_features, Y_data, test_size=0.20)
-
-    # shuffled_idxs = np.random.permutation(n_total_obs)
-    # train
-    # combined_features_train = combined_features[:int(shuffled_idxs]
-    # combined_features_test = combined_features[shuffled_idxs:]
-    # Y_data_train = Y_data[-test_idxs]
-    # Y_data_test = Y_data[test_idxs]
     print(f"Input train shape: {combined_features_train.shape}\nInput test shape: {combined_features_test.shape}")
-    #print(f"Train Frequences: ZoomIn: {np.sum(Y_data_train[:, 0])}, ZoomOut: {np.sum(Y_data_train[:, 1])}")
+    print(f"Train Frequences: {np.sum(Y_data_train, axis=0)}")
 
     # constructing the model
-    #model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1])
+    model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1])
     #model = build_model(combined_features_train.shape[1:], Y_data_train.shape[1], load_model_pth="nn_weights/lstm_2class_20241115_test.h5")
     
     # training and validating the model
-    #train_and_validate_model(model, combined_features_train, Y_data_train)
+    train_and_validate_model(model, combined_features_train, Y_data_train)
 
     # Save model
-    #save_model(model, "nn_weights/lstm_2class_20241127_test.h5")
-    model = load_model("nn_weights/lstm_6class_20241127_test2.h5")
-    print(model.summary())
+    save_model(model, "nn_weights/lstm_6class.h5")
+    # #model = load_model("nn_weights/lstm_2class_20241121_test.h5")
+    # model = load_model("nn_weights/lstm_6class_20241127_test2.h5")
+    # print(model.summary())
     
     # evaluating the model
     evaluate_model(model, combined_features_test, Y_data_test)
