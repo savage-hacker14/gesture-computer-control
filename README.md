@@ -160,21 +160,28 @@ This folder contains scripts for testing and visualizing hand landmark detection
 
 These scripts collectively serve to experiment with and validate hand gesture recognition techniques using different inputs and visualization methods.
 
+### 1.4.3. `figures` folder
+
+This folder contains LSTM result plots, confusion matrix and the ML workflow plot to show final results of the training/model during our presentation demo.
+
+- **model_to_plot.py**: This script generates visual diagrams of neural network architectures from pre-trained models. It loads two LSTM models (6-class and 2-class), and saves their layer structures as PNG images.
+
 ## 1.5. Key Scripts
-### Data Collection and Processing
-- **`data_collection_FULL.py`**: Captures gesture data using MediaPipe for real-time hand detection.
 
 ### Model Training
-- **`train_2class_LSTM.py`**: Trains an LSTM model for two classes (ZoomIn/ZoomOut).
-- **`train_6class_LSTM.py`**: Trains an LSTM model for all six gesture classes.
+- **`train_2class_LSTM.py`**: Trains a two-class LSTM model to classify ZoomIn and ZoomOut gestures using preprocessed hand gesture data. It includes modules for data loading, model building, training, evaluation with metrics like confusion matrices, classification reports, and ROC curves.
+
+- **`train_6class_LSTM.py`**: Trains a six-class LSTM model to classify hand gestures into six categories: ScrollUp, ScrollDown, ZoomIn, ZoomOut, AppSwitchLeft, and AppSwitchRight. It handles data loading, preprocessing, model architecture construction, training, and evaluation.
 
 ### Model Inference
-- **`inference_2class.py`**: Performs inference for ZoomIn/ZoomOut gestures.
-- **`inference_6class.py`**: Performs inference for all six gestures.
+- **`inference_2class.py`**: This script enables real-time hand gesture recognition using a webcam feed. It integrates MediaPipe for hand landmark detection and a pre-trained LSTM model for classifying gestures into ZoomIn and ZoomOut. The script processes live video input, predicts gestures when the hand is still, and maps them to computer actions like zooming or scrolling. It provides a visual overlay with detected gestures, bounding boxes, and FPS on the video feed, making it ideal for testing dynamic gesture recognition systems.
+
+- **`inference_6class.py`**: This script enables real-time recognition of six hand gestures (ScrollUp, ScrollDown, ZoomIn, ZoomOut, AppSwitchLeft, and AppSwitchRight) using a webcam feed. It utilizes MediaPipe for hand landmark detection and a pre-trained LSTM model for gesture classification. The system processes live video input, predicts gestures when the hand is still, and maps the gestures to computer actions, providing visual feedback on the detected gestures, bounding boxes, and system performance metrics such as FPS.
 
 ### Data Structure Testing
-- **`gesture_data_struct_buffer.py`**: Ensures data buffer reliability.
-- **`gesture_data_struct_test.py`**: Validates gesture data structures.
+- **`gesture_data_struct_buffer.py`**: This script tests the performance of a pre-trained LSTM model on hand gesture data from a gesture buffer. It evaluates model inference with varying data input structures, including repeated features and partial buffers, to analyze classification behavior.
+
+- **`gesture_data_struct_test.py`**: Script evaluates the behavior of a pre-trained LSTM model when predicting hand gestures from partially filled data buffers. By incrementally filling the buffer with gesture data, it tracks changes in class probabilities over time and visualizes the predictions. The script helps in understanding how the model handles incomplete or structured input, providing valuable insights into its robustness and potential biases, such as over-reliance on default predictions for empty inputs.
 
 
 ## 1.6. Literature Review / Resources
