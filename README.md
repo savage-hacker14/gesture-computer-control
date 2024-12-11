@@ -141,6 +141,12 @@ This folder contains scripts developed for collecting and analyzing hand landmar
 
 These scripts are integral for generating datasets needed for hand gesture recognition and related applications.
 
+- **data_merging_script.py**: This script provides utilities for merging multiple `.npy` files containing hand gesture data into single consolidated files for efficient dataset management. It combines `X_data`, `Y_data`, and `img_data` arrays.
+
+- **gesture_to_gif.py**: This script generates animated GIFs from hand gesture sequences captured as image data arrays. The output GIFs are saved in a dedicated `gifs/` directory with customizable parameters for frame duration and looping.
+
+- **hand_path_visualizer_v2.py**: This script visualizes the movement of hand landmarks over a gesture sequence by plotting the 21 key points in each frame. V2 saves the animated visualization as a GIF, allowing for intuitive analysis of gesture dynamics.
+
 ### 1.4.2. `mediapipe` test 
 
 
