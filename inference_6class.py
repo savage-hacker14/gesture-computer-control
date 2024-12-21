@@ -45,8 +45,9 @@ RESIZE_H = 720
 
 
 # Detect the operating system
-is_mac = platform.system() == "Darwin"
+is_mac     = platform.system() == "Darwin"
 is_windows = platform.system() == "Windows"
+is_linux   = platform.system() == "Linux"
 
 # Define model parameters
 GESTURE_TIME   = 3                                  # [s], time to collect all frames
@@ -143,7 +144,7 @@ def action(predicted_gesture):
             pyautogui.hotkey('command', '[')
         elif (predicted_gesture == "ScrollDown"):
             pyautogui.hotkey('command', ']')
-    elif is_windows:
+    elif is_windows or is_linux:
         if (predicted_gesture == "ScrollUp"):
             pyautogui.scroll(300)
         elif (predicted_gesture == "ScrollDown"):
@@ -228,7 +229,7 @@ def draw_results(image, detection_result, gesture_label):
     return image
 
 # Open the webcam
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)                           # 2 is RealSense depth feed, 4 is RealSense RGB
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESIZE_W)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESIZE_H)
 
